@@ -3,13 +3,15 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
+#[ORM\HasLifecycleCallbacks]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -18,29 +20,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
-    #[Assert\NotBlank]
-    #[Assert\Email]
     private ?string $email = null;
 
     #[ORM\Column]
     private array $roles = [];
 
-    /**
-     * @var string The hashed password
-     */
-    #[ORM\Column]
-    private ?string $password = null;
-
     #[ORM\Column(length: 255)]
-    #[Assert\NotBlank]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
-    #[Assert\NotBlank]
     private ?string $lastName = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $company = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $password = null;
 
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
@@ -48,11 +43,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?\DateTimeImmutable $updatedAt = null;
 
+    #[ORM\OneToMany(mappedBy: 'projectManager', targetEntity: Project::class)]
+    private Collection $managedProjects;
+
+    #[ORM\ManyToMany(targetEntity: Project::class, inversedBy: 'teamMembers')]
+    #[ORM\JoinTable(name: 'user_project')]
+    private Collection $assignedProjects;
+
+    #[ORM\OneToMany(mappedBy: 'assignedTo', targetEntity: Task::class)]
+    private Collection $assignedTasks;
+
+    #[ORM\ManyToMany(targetEntity: Skill::class, inversedBy: 'users')]
+    #[ORM\JoinTable(name: 'user_skill')]
+    private Collection $skills;
+
     public function __construct()
     {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
-        $this->roles = ['ROLE_USER'];
+        $this->managedProjects = new ArrayCollection();
+        $this->assignedProjects = new ArrayCollection();
+        $this->assignedTasks = new ArrayCollection();
+        $this->skills = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -68,61 +78,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setEmail(string $email): static
     {
         $this->email = $email;
-
         return $this;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
     public function getUserIdentifier(): string
     {
         return (string) $this->email;
     }
 
-    /**
-     * @see UserInterface
-     */
     public function getRoles(): array
     {
         $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
-
         return array_unique($roles);
     }
 
     public function setRoles(array $roles): static
     {
         $this->roles = $roles;
-
         return $this;
-    }
-
-    /**
-     * @see PasswordAuthenticatedUserInterface
-     */
-    public function getPassword(): string
-    {
-        return $this->password;
-    }
-
-    public function setPassword(string $password): static
-    {
-        $this->password = $password;
-
-        return $this;
-    }
-
-    /**
-     * @see UserInterface
-     */
-    public function eraseCredentials(): void
-    {
-        // If you store any temporary, sensitive data on the user, clear it here
-        // $this->plainPassword = null;
     }
 
     public function getFirstName(): ?string
@@ -133,7 +107,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setFirstName(string $firstName): static
     {
         $this->firstName = $firstName;
-
         return $this;
     }
 
@@ -145,7 +118,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setLastName(string $lastName): static
     {
         $this->lastName = $lastName;
-
         return $this;
     }
 
@@ -157,7 +129,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setCompany(?string $company): static
     {
         $this->company = $company;
+        return $this;
+    }
 
+    public function getPassword(): string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
         return $this;
     }
 
@@ -169,7 +151,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setCreatedAt(\DateTimeImmutable $createdAt): static
     {
         $this->createdAt = $createdAt;
-
         return $this;
     }
 
@@ -181,12 +162,134 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setUpdatedAt(\DateTimeImmutable $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
-
         return $this;
+    }
+
+    public function eraseCredentials(): void
+    {
+    }
+
+    public function isProjectManager(): bool
+    {
+        return in_array('ROLE_PROJECT_MANAGER', $this->roles);
+    }
+
+    public function isManager(): bool
+    {
+        return in_array('ROLE_MANAGER', $this->roles);
+    }
+
+    public function isCollaborator(): bool
+    {
+        return in_array('ROLE_COLLABORATOR', $this->roles);
     }
 
     public function getFullName(): string
     {
         return $this->firstName . ' ' . $this->lastName;
+    }
+
+    public function hasSkill(Skill $skill): bool
+    {
+        return $this->skills->contains($skill);
+    }
+
+    public function addSkill(Skill $skill): static
+    {
+        if (!$this->skills->contains($skill)) {
+            $this->skills->add($skill);
+        }
+        return $this;
+    }
+
+    public function removeSkill(Skill $skill): static
+    {
+        $this->skills->removeElement($skill);
+        return $this;
+    }
+
+    #[ORM\PrePersist]
+    public function setCreatedAtValue(): void
+    {
+        $this->createdAt = new \DateTimeImmutable();
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    #[ORM\PreUpdate]
+    public function setUpdatedAtValue(): void
+    {
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    public function getManagedProjects(): Collection
+    {
+        return $this->managedProjects;
+    }
+
+    public function addManagedProject(Project $project): static
+    {
+        if (!$this->managedProjects->contains($project)) {
+            $this->managedProjects->add($project);
+            $project->setProjectManager($this);
+        }
+        return $this;
+    }
+
+    public function removeManagedProject(Project $project): static
+    {
+        if ($this->managedProjects->removeElement($project)) {
+            if ($project->getProjectManager() === $this) {
+                $project->setProjectManager(null);
+            }
+        }
+        return $this;
+    }
+
+    public function getAssignedProjects(): Collection
+    {
+        return $this->assignedProjects;
+    }
+
+    public function addAssignedProject(Project $project): static
+    {
+        if (!$this->assignedProjects->contains($project)) {
+            $this->assignedProjects->add($project);
+        }
+        return $this;
+    }
+
+    public function removeAssignedProject(Project $project): static
+    {
+        $this->assignedProjects->removeElement($project);
+        return $this;
+    }
+
+    public function getAssignedTasks(): Collection
+    {
+        return $this->assignedTasks;
+    }
+
+    public function addAssignedTask(Task $task): static
+    {
+        if (!$this->assignedTasks->contains($task)) {
+            $this->assignedTasks->add($task);
+            $task->setAssignedTo($this);
+        }
+        return $this;
+    }
+
+    public function removeAssignedTask(Task $task): static
+    {
+        if ($this->assignedTasks->removeElement($task)) {
+            if ($task->getAssignedTo() === $this) {
+                $task->setAssignedTo(null);
+            }
+        }
+        return $this;
+    }
+
+    public function getSkills(): Collection
+    {
+        return $this->skills;
     }
 }

@@ -64,4 +64,112 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     {
         return $this->count(['email' => $email]) > 0;
     }
+
+    public function findByRole(string $role): array
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('JSON_CONTAINS(u.roles, :role) = 1')
+            ->setParameter('role', '"' . $role . '"')
+            ->orderBy('u.lastName', 'ASC')
+            ->addOrderBy('u.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function searchUsers(string $searchTerm): array
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.firstName LIKE :search OR u.lastName LIKE :search OR u.email LIKE :search')
+            ->setParameter('search', '%' . $searchTerm . '%')
+            ->orderBy('u.lastName', 'ASC')
+            ->addOrderBy('u.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findUsersWithSkills(array $skillIds): array
+    {
+        if (empty($skillIds)) {
+            return [];
+        }
+
+        $qb = $this->createQueryBuilder('u')
+            ->join('u.skills', 's');
+
+        foreach ($skillIds as $index => $skillId) {
+            $qb->andWhere('s.id = :skill' . $index)
+               ->setParameter('skill' . $index, $skillId);
+        }
+
+        return $qb->orderBy('u.lastName', 'ASC')
+                 ->addOrderBy('u.firstName', 'ASC')
+                 ->getQuery()
+                 ->getResult();
+    }
+
+    public function findProjectManagers(): array
+    {
+        return $this->findByRole('ROLE_PROJECT_MANAGER');
+    }
+
+    public function findManagers(): array
+    {
+        return $this->findByRole('ROLE_MANAGER');
+    }
+
+    public function findCollaborators(): array
+    {
+        return $this->findByRole('ROLE_COLLABORATOR');
+    }
+
+    public function findUsersByCompany(string $company): array
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.company = :company')
+            ->setParameter('company', $company)
+            ->orderBy('u.lastName', 'ASC')
+            ->addOrderBy('u.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findUsersWithLowWorkload(int $maxHours = 20): array
+    {
+        return $this->createQueryBuilder('u')
+            ->leftJoin('u.assignedTasks', 't')
+            ->andWhere('t.status != :completed OR t.id IS NULL')
+            ->setParameter('completed', 'completed')
+            ->groupBy('u.id')
+            ->having('COALESCE(SUM(t.estimatedHours), 0) <= :maxHours')
+            ->setParameter('maxHours', $maxHours)
+            ->orderBy('u.lastName', 'ASC')
+            ->addOrderBy('u.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findUsersBySkillCategory(string $category): array
+    {
+        return $this->createQueryBuilder('u')
+            ->join('u.skills', 's')
+            ->andWhere('s.category = :category')
+            ->setParameter('category', $category)
+            ->orderBy('u.lastName', 'ASC')
+            ->addOrderBy('u.firstName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findUsersWithMultipleSkills(int $minSkills = 3): array
+    {
+        return $this->createQueryBuilder('u')
+            ->join('u.skills', 's')
+            ->groupBy('u.id')
+            ->having('COUNT(s.id) >= :minSkills')
+            ->setParameter('minSkills', $minSkills)
+            ->orderBy('COUNT(s.id)', 'DESC')
+            ->addOrderBy('u.lastName', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }
