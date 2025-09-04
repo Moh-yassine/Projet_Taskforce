@@ -49,6 +49,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'projectManager', targetEntity: Project::class)]
     private Collection $managedProjects;
 
+
     #[ORM\ManyToMany(targetEntity: Project::class, inversedBy: 'teamMembers')]
     #[ORM\JoinTable(name: 'user_project')]
     private Collection $assignedProjects;
@@ -254,8 +255,4 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
 
-    public function getSkills(): Collection
-    {
-        return $this->skills;
-    }
 }
