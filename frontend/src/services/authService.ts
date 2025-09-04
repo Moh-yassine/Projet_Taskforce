@@ -21,7 +21,7 @@ export interface ErrorResponse {
 }
 
 class AuthService {
-  private readonly API_BASE_URL = 'http://localhost:8000/api/auth';
+  private readonly API_BASE_URL = 'http://localhost:8003/api/auth';
 
   async register(userData: {
     firstName: string;

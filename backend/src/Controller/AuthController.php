@@ -32,7 +32,7 @@ class AuthController extends AbstractController
             return $this->json(['message' => 'Données invalides'], Response::HTTP_BAD_REQUEST);
         }
 
-        $requiredFields = ['firstName', 'lastName', 'email', 'password', 'role'];
+        $requiredFields = ['firstName', 'lastName', 'email', 'password'];
         foreach ($requiredFields as $field) {
             if (empty($data[$field])) {
                 return $this->json(['message' => "Le champ '$field' est requis"], Response::HTTP_BAD_REQUEST);
@@ -48,7 +48,7 @@ class AuthController extends AbstractController
         $user->setLastName($data['lastName']);
         $user->setEmail($data['email']);
         $user->setCompany($data['company'] ?? null);
-        $user->setRoles([$data['role']]);
+        $user->setRoles(['ROLE_USER']); // Rôle par défaut pour tous les utilisateurs
 
         $hashedPassword = $this->passwordHasher->hashPassword($user, $data['password']);
         $user->setPassword($hashedPassword);
