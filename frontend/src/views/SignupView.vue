@@ -138,7 +138,7 @@
             <label class="checkbox-container">
               <input type="checkbox" v-model="formData.acceptTerms" required />
               <span class="checkmark"></span>
-              J'accepte les <a href="#" class="link-primary">conditions d'utilisation</a> et la <a href="#" class="link-primary">politique de confidentialité</a>
+              J'accepte les <a href="#" class="link-primary"> conditions d'utilisation</a> 
             </label>
           </div>
 

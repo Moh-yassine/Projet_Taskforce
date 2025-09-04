@@ -4,6 +4,7 @@ export interface User {
   firstName: string;
   lastName: string;
   company?: string;
+  avatar?: string;
   roles: string[];
   createdAt: string;
   updatedAt: string;
