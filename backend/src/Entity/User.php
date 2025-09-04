@@ -34,6 +34,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $company = null;
 
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $initialRole = null;
+
     #[ORM\Column(length: 255)]
     private ?string $password = null;
 
@@ -50,19 +53,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\JoinTable(name: 'user_project')]
     private Collection $assignedProjects;
 
-    #[ORM\OneToMany(mappedBy: 'assignedTo', targetEntity: Task::class)]
-    private Collection $assignedTasks;
 
-    #[ORM\ManyToMany(targetEntity: Skill::class, inversedBy: 'users')]
-    #[ORM\JoinTable(name: 'user_skill')]
-    private Collection $skills;
 
     public function __construct()
     {
         $this->managedProjects = new ArrayCollection();
         $this->assignedProjects = new ArrayCollection();
-        $this->assignedTasks = new ArrayCollection();
-        $this->skills = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -189,24 +185,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->firstName . ' ' . $this->lastName;
     }
 
-    public function hasSkill(Skill $skill): bool
+    public function getInitialRole(): ?string
     {
-        return $this->skills->contains($skill);
+        return $this->initialRole;
     }
 
-    public function addSkill(Skill $skill): static
+    public function setInitialRole(?string $initialRole): static
     {
-        if (!$this->skills->contains($skill)) {
-            $this->skills->add($skill);
-        }
+        $this->initialRole = $initialRole;
         return $this;
     }
 
-    public function removeSkill(Skill $skill): static
-    {
-        $this->skills->removeElement($skill);
-        return $this;
-    }
 
     #[ORM\PrePersist]
     public function setCreatedAtValue(): void
@@ -264,29 +253,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getAssignedTasks(): Collection
-    {
-        return $this->assignedTasks;
-    }
-
-    public function addAssignedTask(Task $task): static
-    {
-        if (!$this->assignedTasks->contains($task)) {
-            $this->assignedTasks->add($task);
-            $task->setAssignedTo($this);
-        }
-        return $this;
-    }
-
-    public function removeAssignedTask(Task $task): static
-    {
-        if ($this->assignedTasks->removeElement($task)) {
-            if ($task->getAssignedTo() === $this) {
-                $task->setAssignedTo(null);
-            }
-        }
-        return $this;
-    }
 
     public function getSkills(): Collection
     {
