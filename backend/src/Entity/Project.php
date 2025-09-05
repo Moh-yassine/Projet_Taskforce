@@ -6,6 +6,7 @@ use App\Repository\ProjectRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: ProjectRepository::class)]
 #[ORM\HasLifecycleCallbacks]
@@ -14,12 +15,15 @@ class Project
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['task:read', 'project:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['task:read', 'project:read'])]
     private ?string $name = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
+    #[Groups(['project:read'])]
     private ?string $description = null;
 
     #[ORM\Column(length: 50)]
@@ -44,8 +48,11 @@ class Project
     #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'assignedProjects')]
     private Collection $teamMembers;
 
-    #[ORM\OneToMany(mappedBy: 'project', targetEntity: Task::class)]
+    #[ORM\OneToMany(mappedBy: 'project', targetEntity: Task::class, cascade: ['persist', 'remove'])]
     private Collection $tasks;
+
+
+
 
     public function __construct()
     {
@@ -168,6 +175,23 @@ class Project
         return $this;
     }
 
+
+    #[ORM\PrePersist]
+    public function setCreatedAtValue(): void
+    {
+        $this->createdAt = new \DateTimeImmutable();
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    #[ORM\PreUpdate]
+    public function setUpdatedAtValue(): void
+    {
+        $this->updatedAt = new \DateTimeImmutable();
+    }
+
+    /**
+     * @return Collection<int, Task>
+     */
     public function getTasks(): Collection
     {
         return $this->tasks;
@@ -190,18 +214,5 @@ class Project
             }
         }
         return $this;
-    }
-
-    #[ORM\PrePersist]
-    public function setCreatedAtValue(): void
-    {
-        $this->createdAt = new \DateTimeImmutable();
-        $this->updatedAt = new \DateTimeImmutable();
-    }
-
-    #[ORM\PreUpdate]
-    public function setUpdatedAtValue(): void
-    {
-        $this->updatedAt = new \DateTimeImmutable();
     }
 }
