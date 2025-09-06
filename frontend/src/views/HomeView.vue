@@ -20,7 +20,7 @@
             <span class="highlight">TaskForce</span>
           </h1>
           <p class="hero-description">
-            Une plateforme collaborative inspirée de Trello pour gérer vos tâches, 
+            Une plateforme collaborative pour gérer vos tâches, 
             organiser vos projets et travailler efficacement en équipe.
           </p>
           <div class="hero-buttons">

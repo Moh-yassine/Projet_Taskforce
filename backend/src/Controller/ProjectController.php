@@ -27,8 +27,12 @@ class ProjectController extends AbstractController
     #[Route('', name: 'api_projects_index', methods: ['GET'])]
     public function index(): JsonResponse
     {
-        // Temporairement, utilisons l'utilisateur avec l'ID 11 (dashboard@example.com)
-        $user = $this->userRepository->find(11);
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Récupérer les projets de l'utilisateur connecté
         $projects = $this->projectRepository->findBy(['projectManager' => $user]);
 
         $projectsData = array_map(function (Project $project) {
@@ -63,8 +67,11 @@ class ProjectController extends AbstractController
     public function create(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-        // Temporairement, utilisons l'utilisateur avec l'ID 11 (dashboard@example.com)
-        $user = $this->userRepository->find(11);
+        
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
 
         if (!$data) {
             return $this->json(['message' => 'Données invalides'], Response::HTTP_BAD_REQUEST);
@@ -121,7 +128,14 @@ class ProjectController extends AbstractController
     #[Route('/{id}', name: 'api_projects_show', methods: ['GET'])]
     public function show(Project $project): JsonResponse
     {
-        // Temporairement, permettre l'accès à tous les projets
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+        
+        if ($project->getProjectManager() !== $user) {
+            return $this->json(['message' => 'Accès refusé'], Response::HTTP_FORBIDDEN);
+        }
 
         return $this->json([
             'id' => $project->getId(),
@@ -148,10 +162,12 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/{id}', name: 'api_projects_update', methods: ['PUT'])]
-    #[IsGranted('ROLE_USER')]
     public function update(Request $request, Project $project): JsonResponse
     {
         $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
         
         if ($project->getProjectManager() !== $user) {
             return $this->json(['message' => 'Accès refusé'], Response::HTTP_FORBIDDEN);
@@ -184,15 +200,16 @@ class ProjectController extends AbstractController
     }
 
     #[Route('/{id}', name: 'api_projects_delete', methods: ['DELETE'])]
-    // #[IsGranted('ROLE_USER')] // Temporairement désactivé
     public function delete(Project $project): JsonResponse
     {
-        // Temporairement, permettre la suppression de tous les projets
-        // $user = $this->getUser();
-        // 
-        // if ($project->getProjectManager() !== $user) {
-        //     return $this->json(['message' => 'Accès refusé'], Response::HTTP_FORBIDDEN);
-        // }
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+        
+        if ($project->getProjectManager() !== $user) {
+            return $this->json(['message' => 'Accès refusé'], Response::HTTP_FORBIDDEN);
+        }
 
         $this->entityManager->remove($project);
         $this->entityManager->flush();
