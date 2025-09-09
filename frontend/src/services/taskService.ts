@@ -1,6 +1,6 @@
 import { authService } from './authService'
 
-const API_BASE_URL = 'http://127.0.0.1:8003/api'
+const API_BASE_URL = '/api'
 
 export interface Task {
   id: number
@@ -64,7 +64,7 @@ class TaskService {
     
     const defaultOptions: RequestInit = {
       headers: {
-        'Content-Type': 'application/json',
+        ...authService.getAuthHeaders(),
         ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },

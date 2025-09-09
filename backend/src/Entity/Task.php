@@ -42,6 +42,22 @@ class Task
     #[Groups(['task:read'])]
     private ?\DateTimeInterface $updatedAt = null;
 
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    #[Groups(['task:read', 'task:write'])]
+    private ?\DateTimeInterface $dueDate = null;
+
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    #[Groups(['task:read', 'task:write'])]
+    private ?int $estimatedHours = 0;
+
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    #[Groups(['task:read', 'task:write'])]
+    private ?int $actualHours = 0;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    #[Groups(['task:read', 'task:write'])]
+    private ?bool $isAutoAssigned = false;
+
     #[ORM\ManyToOne(targetEntity: Project::class, inversedBy: 'tasks')]
     #[ORM\JoinColumn(nullable: true)]
     #[Groups(['task:read', 'task:write'])]
@@ -175,6 +191,50 @@ class Task
     public function removeSkill(Skill $skill): static
     {
         $this->skills->removeElement($skill);
+        return $this;
+    }
+
+    public function getDueDate(): ?\DateTimeInterface
+    {
+        return $this->dueDate;
+    }
+
+    public function setDueDate(?\DateTimeInterface $dueDate): static
+    {
+        $this->dueDate = $dueDate;
+        return $this;
+    }
+
+    public function getEstimatedHours(): ?int
+    {
+        return $this->estimatedHours;
+    }
+
+    public function setEstimatedHours(int $estimatedHours): static
+    {
+        $this->estimatedHours = $estimatedHours;
+        return $this;
+    }
+
+    public function getActualHours(): ?int
+    {
+        return $this->actualHours;
+    }
+
+    public function setActualHours(int $actualHours): static
+    {
+        $this->actualHours = $actualHours;
+        return $this;
+    }
+
+    public function isAutoAssigned(): ?bool
+    {
+        return $this->isAutoAssigned;
+    }
+
+    public function setIsAutoAssigned(bool $isAutoAssigned): static
+    {
+        $this->isAutoAssigned = $isAutoAssigned;
         return $this;
     }
 }

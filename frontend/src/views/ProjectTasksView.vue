@@ -1,13 +1,56 @@
 <template>
   <div class="project-tasks-view">
     <!-- Header -->
-    <div class="header">
-      <button @click="goBack" class="back-btn">
-        ← Retour au dashboard
-      </button>
-      <h1 v-if="project">{{ project.name }}</h1>
-      <p v-if="project" class="project-description">{{ project.description }}</p>
+    <header class="app-header">
+      <div class="header-content">
+        <div class="header-left">
+          <h1 class="header-title" v-if="project">{{ project.name }}</h1>
+        </div>
+        <button @click="goBack" class="btn btn-primary">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+          Retour
+        </button>
+      </div>
+    </header>
+
+    <!-- Description du projet -->
+    <div class="project-description-section" v-if="project">
+      <div class="description-header">
+        <h3>Description du projet</h3>
+        <button @click="toggleEditDescription" class="btn btn-edit">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          {{ isEditingDescription ? 'Annuler' : 'Modifier' }}
+        </button>
+      </div>
+      
+      <div v-if="!isEditingDescription" class="project-description">
+        <p v-if="project.description">{{ project.description }}</p>
+        <p v-else class="no-description">Aucune description disponible</p>
+      </div>
+      
+      <div v-else class="description-edit-form">
+        <textarea 
+          v-model="editedDescription" 
+          class="description-textarea"
+          placeholder="Entrez la description du projet..."
+          rows="4"
+        ></textarea>
+        <div class="edit-actions">
+          <button @click="saveDescription" class="btn btn-primary" :disabled="isSaving">
+            <span v-if="isSaving" class="loading-spinner"></span>
+            {{ isSaving ? 'Sauvegarde...' : 'Enregistrer' }}
+          </button>
+          <button @click="cancelEditDescription" class="btn btn-secondary">Annuler</button>
+        </div>
+      </div>
     </div>
+
+    <div class="content-spacing"></div>
 
     <!-- Kanban Board -->
     <div class="kanban-board" v-if="!isLoading">
@@ -64,6 +107,18 @@
                 </div>
               </div>
               <p class="task-description">{{ task.description }}</p>
+              
+              <!-- Compétences -->
+              <div v-if="task.skills && task.skills.length > 0" class="task-skills">
+                <span 
+                  v-for="skill in task.skills" 
+                  :key="skill.id" 
+                  class="skill-tag"
+                >
+                  {{ skill.name }}
+                </span>
+              </div>
+              
               <div class="task-footer">
                 <span class="priority" :class="task.priority">{{ task.priority }}</span>
                 <span v-if="task.assignee" class="assignee">
@@ -126,6 +181,18 @@
                 </div>
               </div>
               <p class="task-description">{{ task.description }}</p>
+              
+              <!-- Compétences -->
+              <div v-if="task.skills && task.skills.length > 0" class="task-skills">
+                <span 
+                  v-for="skill in task.skills" 
+                  :key="skill.id" 
+                  class="skill-tag"
+                >
+                  {{ skill.name }}
+                </span>
+              </div>
+              
               <div class="task-footer">
                 <span class="priority" :class="task.priority">{{ task.priority }}</span>
                 <span v-if="task.assignee" class="assignee">
@@ -188,6 +255,18 @@
                 </div>
               </div>
               <p class="task-description">{{ task.description }}</p>
+              
+              <!-- Compétences -->
+              <div v-if="task.skills && task.skills.length > 0" class="task-skills">
+                <span 
+                  v-for="skill in task.skills" 
+                  :key="skill.id" 
+                  class="skill-tag"
+                >
+                  {{ skill.name }}
+                </span>
+              </div>
+              
               <div class="task-footer">
                 <span class="priority" :class="task.priority">{{ task.priority }}</span>
                 <span v-if="task.assignee" class="assignee">
@@ -270,6 +349,11 @@ const showDeleteTaskModal = ref(false)
 const taskToDelete = ref<Task | null>(null)
 const isDeletingTask = ref(false)
 
+// État pour l'édition de la description
+const isEditingDescription = ref(false)
+const editedDescription = ref('')
+const isSaving = ref(false)
+
 // Couleurs des colonnes
 const columnColors = ref({
   todo: '#f8f9fa',
@@ -332,7 +416,7 @@ const openCreateTaskModal = (status?: string) => {
 
 const openTaskModal = (task: Task) => {
   selectedTask.value = task
-  isEditMode.value = false
+  isEditMode.value = true
   showTaskModal.value = true
 }
 
@@ -434,6 +518,48 @@ const toggleColorMenu = (status: string) => {
   showColorMenu.value = showColorMenu.value === status ? null : status
 }
 
+// Méthodes pour l'édition de la description
+const toggleEditDescription = () => {
+  if (isEditingDescription.value) {
+    cancelEditDescription()
+  } else {
+    isEditingDescription.value = true
+    editedDescription.value = project.value?.description || ''
+  }
+}
+
+const cancelEditDescription = () => {
+  isEditingDescription.value = false
+  editedDescription.value = ''
+}
+
+const saveDescription = async () => {
+  if (!project.value) return
+  
+  isSaving.value = true
+  try {
+    // Appel au service pour mettre à jour le projet en base de données
+    const response = await projectService.updateProject(project.value.id, { 
+      description: editedDescription.value 
+    })
+    
+    // Mise à jour de l'objet projet local avec les données retournées
+    project.value.description = response.project.description
+    project.value.updatedAt = response.project.updatedAt
+    
+    isEditingDescription.value = false
+    editedDescription.value = ''
+    
+    console.log('Description sauvegardée en base de données:', response.message)
+  } catch (error) {
+    console.error('Erreur lors de la sauvegarde:', error)
+    // Optionnel: afficher un message d'erreur à l'utilisateur
+    alert('Erreur lors de la sauvegarde de la description. Veuillez réessayer.')
+  } finally {
+    isSaving.value = false
+  }
+}
+
 // Lifecycle
 onMounted(async () => {
   // Vérifier l'authentification
@@ -456,41 +582,123 @@ onMounted(async () => {
 
 <style scoped>
 .project-tasks-view {
-  padding: 2rem;
+  padding-top: 1rem; /* Un peu de padding en haut pour l'espacement */
+  padding-left: 2rem;
+  padding-right: 2rem;
+  padding-bottom: 2rem;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--background-light);
 }
 
-.header {
-  margin-bottom: 2rem;
-  color: white;
+/* Header fixe et espacement */
+.content-spacing {
+  height: 2rem; /* Espacement réduit entre la description et le contenu */
 }
 
-.back-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  cursor: pointer;
+/* Section description du projet */
+.project-description-section {
+  margin-top: 7rem; /* Espacement plus important depuis le header fixe */
+  padding: 1.5rem 2rem;
+  background: var(--white);
+  border-radius: 12px; /* Arrondi comme les colonnes */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem; /* Espacement supplémentaire en bas */
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.description-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1rem;
-  transition: background 0.3s;
 }
 
-.back-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+.description-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
-.header h1 {
-  font-size: 2.5rem;
-  margin: 0 0 0.5rem 0;
-  font-weight: 700;
+.btn-edit {
+  background: var(--secondary-color);
+  color: var(--white);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-edit:hover {
+  background: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.description-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.description-textarea {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.2s ease;
+}
+
+.description-textarea:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+.edit-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+.no-description {
+  color: var(--text-secondary);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Override du style global pour le header fixe */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  width: 100%;
+}
+
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .project-description {
-  font-size: 1.1rem;
-  opacity: 0.9;
+  font-size: 1rem;
+  color: var(--text-secondary);
   margin: 0;
+  font-weight: 400;
+  line-height: 1.5;
+  max-width: 100%;
+  word-wrap: break-word;
 }
 
 .kanban-board {
@@ -668,6 +876,23 @@ onMounted(async () => {
   color: #666;
   font-size: 0.9rem;
   line-height: 1.4;
+}
+
+.task-skills {
+  margin: 0.5rem 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.task-skills .skill-tag {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid #bbdefb;
 }
 
 .task-footer {

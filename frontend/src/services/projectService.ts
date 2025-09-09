@@ -1,3 +1,5 @@
+import { authService } from './authService';
+
 export interface Project {
   id: number;
   name: string;
@@ -26,18 +28,21 @@ export interface CreateProjectData {
 }
 
 class ProjectService {
-  private readonly API_BASE_URL = 'http://localhost:8003/api/projects';
+  private readonly API_BASE_URL = '/api/projects';
 
   async getProjects(): Promise<Project[]> {
-    // Temporairement, sans authentification pour les tests
     const response = await fetch(this.API_BASE_URL, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: authService.getAuthHeaders(),
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        // Rediriger vers la page de connexion si non authentifié
+        authService.logout();
+        window.location.href = '/login';
+        throw new Error('Non authentifié');
+      }
       throw new Error('Erreur lors de la récupération des projets');
     }
 
@@ -45,16 +50,19 @@ class ProjectService {
   }
 
   async createProject(data: CreateProjectData): Promise<{ message: string; project: Project }> {
-    // Temporairement, sans authentification pour les tests
     const response = await fetch(this.API_BASE_URL, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: authService.getAuthHeaders(),
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        // Rediriger vers la page de connexion si non authentifié
+        authService.logout();
+        window.location.href = '/login';
+        throw new Error('Non authentifié');
+      }
       const errorData = await response.json();
       throw new Error(errorData.message || 'Erreur lors de la création du projet');
     }
@@ -63,17 +71,9 @@ class ProjectService {
   }
 
   async getProject(id: number): Promise<Project> {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      throw new Error('Token d\'authentification manquant');
-    }
-
     const response = await fetch(`${this.API_BASE_URL}/${id}`, {
       method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
+      headers: authService.getAuthHeaders(),
     });
 
     if (!response.ok) {
@@ -87,17 +87,9 @@ class ProjectService {
   }
 
   async updateProject(id: number, data: Partial<CreateProjectData>): Promise<{ message: string; project: Project }> {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      throw new Error('Token d\'authentification manquant');
-    }
-
     const response = await fetch(`${this.API_BASE_URL}/${id}`, {
       method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
+      headers: authService.getAuthHeaders(),
       body: JSON.stringify(data),
     });
 
@@ -113,15 +105,18 @@ class ProjectService {
   }
 
   async deleteProject(id: number): Promise<{ message: string }> {
-    // Temporairement, sans authentification pour les tests
     const response = await fetch(`${this.API_BASE_URL}/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: authService.getAuthHeaders(),
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        // Rediriger vers la page de connexion si non authentifié
+        authService.logout();
+        window.location.href = '/login';
+        throw new Error('Non authentifié');
+      }
       const errorData = await response.json();
       throw new Error(errorData.message || 'Erreur lors de la suppression du projet');
     }

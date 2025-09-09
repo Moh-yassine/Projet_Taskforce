@@ -107,10 +107,38 @@
                 v-for="user in availableUsers" 
                 :key="user.id"
                 :value="user.id"
+                :disabled="user.remainingCapacity < (formData.estimatedHours || 0)"
               >
                 {{ user.firstName }} {{ user.lastName }} ({{ user.role }})
+                <span v-if="user.remainingCapacity < (formData.estimatedHours || 0)">- Surcharge</span>
+                <span v-else>- {{ user.remainingCapacity }}h disponibles</span>
               </option>
             </select>
+          </div>
+          
+          <!-- Affichage de la charge de travail de l'utilisateur sélectionné -->
+          <div v-if="selectedUser" class="workload-info">
+            <h4>Charge de travail de {{ selectedUser.firstName }} {{ selectedUser.lastName }}</h4>
+            <div class="workload-details">
+              <div class="workload-bar">
+                <div 
+                  class="workload-fill" 
+                  :style="{ 
+                    width: `${Math.min(selectedUser.utilizationPercentage, 100)}%`,
+                    backgroundColor: getUtilizationColor(selectedUser.utilizationPercentage)
+                  }"
+                ></div>
+              </div>
+              <div class="workload-stats">
+                <span>{{ selectedUser.currentWeekHours }}h / {{ selectedUser.maxWeekHours }}h</span>
+                <span class="utilization-percentage" :style="{ color: getUtilizationColor(selectedUser.utilizationPercentage) }">
+                  {{ selectedUser.utilizationPercentage.toFixed(1) }}%
+                </span>
+              </div>
+              <div v-if="newTotalHours > selectedUser.maxWeekHours" class="overload-warning">
+                ⚠️ Surcharge: {{ newTotalHours }}h > {{ selectedUser.maxWeekHours }}h
+              </div>
+            </div>
           </div>
           
           <div class="form-group">
@@ -204,6 +232,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { userService } from '@/services/userService'
 
 interface Task {
   id?: number
@@ -270,6 +299,17 @@ const newSkill = ref('')
 const availableUsers = ref<User[]>([])
 const showSuccessMessage = ref(false)
 
+// Computed properties pour la charge de travail
+const selectedUser = computed(() => {
+  if (!formData.value.assigneeId) return null
+  return availableUsers.value.find(user => user.id === formData.value.assigneeId)
+})
+
+const newTotalHours = computed(() => {
+  if (!selectedUser.value) return 0
+  return selectedUser.value.currentWeekHours + (formData.value.estimatedHours || 0)
+})
+
 // Computed pour déterminer si on est en mode édition
 const isEdit = computed(() => !!props.task)
 
@@ -318,18 +358,40 @@ onMounted(() => {
 // Charger les utilisateurs disponibles
 const loadAvailableUsers = async () => {
   try {
-    // TODO: Implémenter le service utilisateurs
-    // availableUsers.value = await userService.getProjectUsers(props.project?.id)
+    console.log('Chargement des utilisateurs assignables...')
     
-    // Données de test
-    availableUsers.value = [
-      { id: 1, firstName: 'John', lastName: 'Doe', role: 'Développeur' },
-      { id: 2, firstName: 'Jane', lastName: 'Smith', role: 'Designer' },
-      { id: 3, firstName: 'Bob', lastName: 'Johnson', role: 'Manager' },
-      { id: 4, firstName: 'Alice', lastName: 'Brown', role: 'Responsable' }
-    ]
+    // Vérifier le token
+    const token = localStorage.getItem('authToken')
+    console.log('Token présent:', !!token)
+    console.log('Token:', token ? token.substring(0, 20) + '...' : 'Aucun token')
+    
+    // Récupérer les vrais utilisateurs de la base de données
+    const assignableUsers = await userService.getAssignableUsers()
+    
+    console.log('Utilisateurs récupérés:', assignableUsers)
+    
+    // Transformer les données pour correspondre au format attendu
+    availableUsers.value = assignableUsers.map(user => ({
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: Array.isArray(user.roles) 
+        ? (user.roles.includes('ROLE_MANAGER') ? 'Manager' : 
+           user.roles.includes('ROLE_COLLABORATOR') ? 'Collaborateur' : 'Utilisateur')
+        : (user.roles['2'] === 'ROLE_MANAGER' ? 'Manager' :
+           user.roles['2'] === 'ROLE_COLLABORATOR' ? 'Collaborateur' : 'Utilisateur'),
+      email: user.email,
+      currentWeekHours: user.currentWeekHours,
+      maxWeekHours: user.maxWeekHours,
+      utilizationPercentage: user.utilizationPercentage,
+      remainingCapacity: user.remainingCapacity
+    }))
+    
+    console.log('Utilisateurs transformés:', availableUsers.value)
   } catch (error) {
     console.error('Erreur lors du chargement des utilisateurs:', error)
+    // En cas d'erreur, garder une liste vide plutôt que des données fictives
+    availableUsers.value = []
   }
 }
 
@@ -394,6 +456,14 @@ const formatDate = (dateString: string) => {
     hour: '2-digit',
     minute: '2-digit'
   })
+}
+
+// Méthode pour obtenir la couleur d'utilisation
+const getUtilizationColor = (percentage: number) => {
+  if (percentage >= 100) return '#e74c3c' // Rouge
+  if (percentage >= 90) return '#f39c12' // Orange
+  if (percentage >= 75) return '#f1c40f' // Jaune
+  return '#27ae60' // Vert
 }
 </script>
 
@@ -745,5 +815,63 @@ const formatDate = (dateString: string) => {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+/* Styles pour la charge de travail */
+.workload-info {
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border: 1px solid #e2e8f0;
+}
+
+.workload-info h4 {
+  margin: 0 0 1rem 0;
+  color: #2d3748;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.workload-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.workload-bar {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.workload-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.workload-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: #4a5568;
+}
+
+.utilization-percentage {
+  font-weight: 600;
+}
+
+.overload-warning {
+  background: #fed7d7;
+  color: #c53030;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #feb2b2;
 }
 </style>

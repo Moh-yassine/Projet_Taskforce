@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Project;
 use App\Repository\ProjectRepository;
 use App\Repository\UserRepository;
+use App\Service\PermissionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -21,7 +22,8 @@ class ProjectController extends AbstractController
         private EntityManagerInterface $entityManager,
         private ProjectRepository $projectRepository,
         private UserRepository $userRepository,
-        private ValidatorInterface $validator
+        private ValidatorInterface $validator,
+        private PermissionService $permissionService
     ) {}
 
     #[Route('', name: 'api_projects_index', methods: ['GET'])]
@@ -32,8 +34,14 @@ class ProjectController extends AbstractController
             return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // Récupérer les projets de l'utilisateur connecté
-        $projects = $this->projectRepository->findBy(['projectManager' => $user]);
+        // Récupérer les projets selon les permissions
+        if ($this->permissionService->canManageProjects($user)) {
+            // Le responsable de projet voit tous les projets
+            $projects = $this->projectRepository->findAll();
+        } else {
+            // Les autres utilisateurs voient seulement les projets auxquels ils participent
+            $projects = $user->getAssignedProjects()->toArray();
+        }
 
         $projectsData = array_map(function (Project $project) {
             return [
@@ -71,6 +79,11 @@ class ProjectController extends AbstractController
         $user = $this->getUser();
         if (!$user) {
             return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Seul le responsable de projet peut créer des projets
+        if (!$this->permissionService->canManageProjects($user)) {
+            return $this->json(['message' => 'Accès non autorisé pour créer des projets'], Response::HTTP_FORBIDDEN);
         }
 
         if (!$data) {
@@ -133,8 +146,8 @@ class ProjectController extends AbstractController
             return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
         }
         
-        if ($project->getProjectManager() !== $user) {
-            return $this->json(['message' => 'Accès refusé'], Response::HTTP_FORBIDDEN);
+        if (!$this->permissionService->canViewProject($user, $project)) {
+            return $this->json(['message' => 'Accès non autorisé à ce projet'], Response::HTTP_FORBIDDEN);
         }
 
         return $this->json([
@@ -169,8 +182,8 @@ class ProjectController extends AbstractController
             return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
         }
         
-        if ($project->getProjectManager() !== $user) {
-            return $this->json(['message' => 'Accès refusé'], Response::HTTP_FORBIDDEN);
+        if (!$this->permissionService->canEditProject($user, $project)) {
+            return $this->json(['message' => 'Accès non autorisé pour modifier ce projet'], Response::HTTP_FORBIDDEN);
         }
 
         $data = json_decode($request->getContent(), true);
@@ -207,8 +220,8 @@ class ProjectController extends AbstractController
             return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
         }
         
-        if ($project->getProjectManager() !== $user) {
-            return $this->json(['message' => 'Accès refusé'], Response::HTTP_FORBIDDEN);
+        if (!$this->permissionService->canEditProject($user, $project)) {
+            return $this->json(['message' => 'Accès non autorisé pour supprimer ce projet'], Response::HTTP_FORBIDDEN);
         }
 
         $this->entityManager->remove($project);

@@ -26,7 +26,8 @@
                 <span>Mes tâches</span>
               </router-link>
             </li>
-            <li class="nav-item">
+            <!-- Projets - Visible seulement pour le Responsable de Projet -->
+            <li v-if="canManageProjects" class="nav-item">
               <a href="#" class="nav-link" @click.prevent="goToProjects">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
@@ -34,7 +35,8 @@
                 <span>Projets</span>
               </a>
             </li>
-            <li class="nav-item">
+            <!-- Admin - Visible pour le Responsable de Projet et le Manager -->
+            <li v-if="canAccessAdmin" class="nav-item">
               <router-link to="/admin" class="nav-link">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H19C20.11 23 21 22.11 21 21V9M19 9H14V4H5V21H19V9Z"/>
@@ -139,7 +141,7 @@
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                   </svg>
                 </button>
-                <button @click="deleteTask(task)" class="action-btn">
+                <button v-if="canDeleteTasks" @click="deleteTask(task)" class="action-btn">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3,6 5,6 21,6"></polyline>
                     <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
@@ -201,6 +203,28 @@
       @close="closeTaskModal"
       @save="handleTaskSave"
     />
+
+    <!-- Modal de confirmation de suppression -->
+    <div v-if="showDeleteModal" class="delete-modal-overlay" @click="closeDeleteModal">
+      <div class="delete-modal" @click.stop>
+        <div class="delete-modal-header">
+          <h3>Supprimer la tâche</h3>
+          <button @click="closeDeleteModal" class="close-btn">×</button>
+        </div>
+        <div class="delete-modal-content">
+          <div class="warning-icon">⚠️</div>
+          <p>Êtes-vous sûr de vouloir supprimer la tâche <strong>"{{ taskToDelete?.title }}"</strong> ?</p>
+          <p class="warning-text">Cette action est irréversible.</p>
+        </div>
+        <div class="delete-modal-actions">
+          <button @click="closeDeleteModal" class="btn btn-secondary">Annuler</button>
+          <button @click="confirmDeleteTask" class="btn btn-danger" :disabled="isDeleting">
+            <span v-if="isDeleting">Suppression...</span>
+            <span v-else>Supprimer</span>
+          </button>
+        </div>
+      </div>
+    </div>
     </div>
   </div>
 </template>
@@ -254,7 +278,22 @@ const selectedStatus = ref('')
 const selectedPriority = ref('')
 const showTaskModal = ref(false)
 const selectedTask = ref<Task | null>(null)
+const showDeleteModal = ref(false)
+const taskToDelete = ref<Task | null>(null)
+const isDeleting = ref(false)
 const user = ref<User | null>(null)
+
+const canManageProjects = computed(() => {
+  return user.value?.permissions?.canManageProjects || false
+})
+
+const canAccessAdmin = computed(() => {
+  return user.value?.permissions?.canAccessAdmin || false
+})
+
+const canDeleteTasks = computed(() => {
+  return user.value?.permissions?.canManageProjects || false
+})
 
 // Computed
 const filteredTasks = computed(() => {
@@ -296,20 +335,23 @@ const loadTasksForProject = () => {
 const loadAllTasks = async () => {
   isLoading.value = true
   try {
-    // Charger toutes les tâches de tous les projets
-    const allTasks = []
-    for (const project of projects.value) {
-      try {
-        const projectTasks = await taskService.getTasksByProject(project.id)
-        allTasks.push(...projectTasks)
-      } catch (error) {
-        console.error(`Erreur lors du chargement des tâches du projet ${project.name}:`, error)
+    // Charger uniquement les tâches assignées à l'utilisateur connecté
+    const { userService } = await import('@/services/userService')
+    const myTasks = await userService.getMyTasks()
+    tasks.value = myTasks
+    
+    // Charger les projets pour le filtre (uniquement les projets des tâches assignées)
+    const uniqueProjects = new Map()
+    myTasks.forEach(task => {
+      if (task.project) {
+        uniqueProjects.set(task.project.id, task.project)
       }
-    }
-    tasks.value = allTasks
+    })
+    projects.value = Array.from(uniqueProjects.values())
   } catch (error) {
-    console.error('Erreur lors du chargement des tâches:', error)
+    console.error('Erreur lors du chargement de mes tâches:', error)
     tasks.value = []
+    projects.value = []
   } finally {
     isLoading.value = false
   }
@@ -324,17 +366,31 @@ const editTask = (task: Task) => {
   showTaskModal.value = true
 }
 
-const deleteTask = async (task: Task) => {
-  if (confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) {
-    try {
-      await taskService.deleteTask(task.id)
-      tasks.value = tasks.value.filter(t => t.id !== task.id)
-      console.log('Tâche supprimée avec succès')
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error)
-      alert('Erreur lors de la suppression de la tâche. Veuillez réessayer.')
-    }
+const deleteTask = (task: Task) => {
+  taskToDelete.value = task
+  showDeleteModal.value = true
+}
+
+const confirmDeleteTask = async () => {
+  if (!taskToDelete.value) return
+  
+  isDeleting.value = true
+  try {
+    await taskService.deleteTask(taskToDelete.value.id)
+    tasks.value = tasks.value.filter(t => t.id !== taskToDelete.value!.id)
+    closeDeleteModal()
+    console.log('Tâche supprimée avec succès')
+  } catch (error) {
+    console.error('Erreur lors de la suppression:', error)
+    alert('Erreur lors de la suppression de la tâche. Veuillez réessayer.')
+  } finally {
+    isDeleting.value = false
   }
+}
+
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+  taskToDelete.value = null
 }
 
 const closeTaskModal = () => {
@@ -903,6 +959,182 @@ onMounted(async () => {
     margin: 0.5rem 0.5rem;
     padding: 0.5rem;
     font-size: 0.75rem;
+  }
+}
+
+/* Styles pour la modal de suppression */
+.delete-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.delete-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 0;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: slideIn 0.3s ease;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.delete-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.delete-modal-header h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.delete-modal-content {
+  padding: 2rem;
+  text-align: center;
+}
+
+.warning-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.delete-modal-content p {
+  margin: 0 0 1rem 0;
+  color: #374151;
+  line-height: 1.6;
+}
+
+.warning-text {
+  color: #dc2626 !important;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.delete-modal-actions {
+  display: flex;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  justify-content: flex-end;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.btn-danger:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive pour la modal */
+@media (max-width: 768px) {
+  .delete-modal {
+    width: 95%;
+    margin: 1rem;
+  }
+  
+  .delete-modal-header,
+  .delete-modal-content,
+  .delete-modal-actions {
+    padding: 1rem 1.5rem;
+  }
+  
+  .delete-modal-actions {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
   }
 }
 </style>
