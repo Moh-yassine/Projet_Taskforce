@@ -279,12 +279,20 @@ const handleSignup = async () => {
 
 <style scoped>
 :root {
-  --primary-color: #0079bf;
-  --primary-hover: #005a8b;
-  --text-primary: #2c3e50;
-  --text-secondary: #6c757d;
+  /* Palette Deep Sea */
+  --deep-dark: #0D1B2A;
+  --deep-navy: #1B263B;
+  --deep-blue: #415A77;
+  --deep-light: #778DA9;
+  --deep-pale: #E0E1DD;
+  
+  /* Couleurs principales */
+  --primary-color: var(--deep-blue);
+  --primary-hover: var(--deep-navy);
+  --text-primary: var(--deep-dark);
+  --text-secondary: var(--deep-blue);
   --white: #ffffff;
-  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow: 0 4px 6px rgba(13, 27, 42, 0.1);
   --shadow-hover: 0 8px 15px rgba(0, 0, 0, 0.15);
   --error-color: #dc3545;
   --success-color: #28a745;

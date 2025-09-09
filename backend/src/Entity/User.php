@@ -54,12 +54,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\JoinTable(name: 'user_project')]
     private Collection $assignedProjects;
 
+    #[ORM\ManyToMany(targetEntity: Skill::class, inversedBy: 'users')]
+    #[ORM\JoinTable(name: 'user_skill')]
+    private Collection $skills;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: UserSkill::class, cascade: ['persist', 'remove'])]
+    private Collection $userSkills;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Workload::class, cascade: ['persist', 'remove'])]
+    private Collection $workloads;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Notification::class, cascade: ['persist', 'remove'])]
+    private Collection $notifications;
 
     public function __construct()
     {
         $this->managedProjects = new ArrayCollection();
         $this->assignedProjects = new ArrayCollection();
+        $this->skills = new ArrayCollection();
+        $this->userSkills = new ArrayCollection();
+        $this->workloads = new ArrayCollection();
+        $this->notifications = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -181,6 +196,55 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return in_array('ROLE_COLLABORATOR', $this->roles);
     }
 
+    public function getPrimaryRole(): string
+    {
+        if ($this->isProjectManager()) {
+            return 'ROLE_PROJECT_MANAGER';
+        }
+        if ($this->isManager()) {
+            return 'ROLE_MANAGER';
+        }
+        if ($this->isCollaborator()) {
+            return 'ROLE_COLLABORATOR';
+        }
+        return 'ROLE_USER';
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return in_array($role, $this->roles);
+    }
+
+    public function canManageProjects(): bool
+    {
+        return $this->isProjectManager();
+    }
+
+    public function canSuperviseTasks(): bool
+    {
+        return $this->isProjectManager() || $this->isManager();
+    }
+
+    public function canAssignTasks(): bool
+    {
+        return $this->isProjectManager();
+    }
+
+    public function canViewAllTasks(): bool
+    {
+        return $this->isProjectManager() || $this->isManager();
+    }
+
+    public function canEditTasks(): bool
+    {
+        return $this->isProjectManager() || $this->isManager();
+    }
+
+    public function canViewReports(): bool
+    {
+        return $this->isProjectManager() || $this->isManager();
+    }
+
     public function getFullName(): string
     {
         return $this->firstName . ' ' . $this->lastName;
@@ -254,5 +318,106 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /**
+     * @return Collection<int, Skill>
+     */
+    public function getSkills(): Collection
+    {
+        return $this->skills;
+    }
 
+    public function addSkill(Skill $skill): static
+    {
+        if (!$this->skills->contains($skill)) {
+            $this->skills->add($skill);
+        }
+        return $this;
+    }
+
+    public function removeSkill(Skill $skill): static
+    {
+        $this->skills->removeElement($skill);
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, UserSkill>
+     */
+    public function getUserSkills(): Collection
+    {
+        return $this->userSkills;
+    }
+
+    public function addUserSkill(UserSkill $userSkill): static
+    {
+        if (!$this->userSkills->contains($userSkill)) {
+            $this->userSkills->add($userSkill);
+            $userSkill->setUser($this);
+        }
+        return $this;
+    }
+
+    public function removeUserSkill(UserSkill $userSkill): static
+    {
+        if ($this->userSkills->removeElement($userSkill)) {
+            if ($userSkill->getUser() === $this) {
+                $userSkill->setUser(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Workload>
+     */
+    public function getWorkloads(): Collection
+    {
+        return $this->workloads;
+    }
+
+    public function addWorkload(Workload $workload): static
+    {
+        if (!$this->workloads->contains($workload)) {
+            $this->workloads->add($workload);
+            $workload->setUser($this);
+        }
+        return $this;
+    }
+
+    public function removeWorkload(Workload $workload): static
+    {
+        if ($this->workloads->removeElement($workload)) {
+            if ($workload->getUser() === $this) {
+                $workload->setUser(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Notification>
+     */
+    public function getNotifications(): Collection
+    {
+        return $this->notifications;
+    }
+
+    public function addNotification(Notification $notification): static
+    {
+        if (!$this->notifications->contains($notification)) {
+            $this->notifications->add($notification);
+            $notification->setUser($this);
+        }
+        return $this;
+    }
+
+    public function removeNotification(Notification $notification): static
+    {
+        if ($this->notifications->removeElement($notification)) {
+            if ($notification->getUser() === $this) {
+                $notification->setUser(null);
+            }
+        }
+        return $this;
+    }
 }

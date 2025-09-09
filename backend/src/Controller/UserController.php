@@ -4,13 +4,13 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Repository\TaskRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/users')]
 class UserController extends AbstractController
@@ -18,128 +18,185 @@ class UserController extends AbstractController
     public function __construct(
         private EntityManagerInterface $entityManager,
         private UserRepository $userRepository,
-        private ValidatorInterface $validator
+        private TaskRepository $taskRepository
     ) {}
 
-    #[Route('', name: 'api_users_index', methods: ['GET'])]
-    public function index(): JsonResponse
+    #[Route('/assignable', name: 'users_assignable', methods: ['GET'])]
+    #[IsGranted('ROLE_PROJECT_MANAGER')]
+    public function getAssignableUsers(): JsonResponse
+    {
+        // Récupérer les utilisateurs qui peuvent recevoir des tâches
+        $users = $this->userRepository->createQueryBuilder('u')
+            ->where('u.roles LIKE :managerRole OR u.roles LIKE :collaboratorRole')
+            ->setParameter('managerRole', '%ROLE_MANAGER%')
+            ->setParameter('collaboratorRole', '%ROLE_COLLABORATOR%')
+            ->getQuery()
+            ->getResult();
+        
+        $assignableUsers = [];
+        foreach ($users as $user) {
+            $workload = $this->calculateUserWorkload($user);
+            
+            $assignableUsers[] = [
+                'id' => $user->getId(),
+                'firstName' => $user->getFirstName(),
+                'lastName' => $user->getLastName(),
+                'email' => $user->getEmail(),
+                'roles' => $user->getRoles(),
+                'currentWeekHours' => $workload['currentWeekHours'],
+                'maxWeekHours' => $workload['maxWeekHours'],
+                'utilizationPercentage' => $workload['utilizationPercentage'],
+                'remainingCapacity' => $workload['maxWeekHours'] - $workload['currentWeekHours'],
+                'canReceiveTasks' => $workload['currentWeekHours'] < $workload['maxWeekHours'],
+                'skills' => $this->getUserSkills($user)
+            ];
+        }
+
+        // Trier par capacité restante (décroissant)
+        usort($assignableUsers, function($a, $b) {
+            return $b['remainingCapacity'] <=> $a['remainingCapacity'];
+        });
+
+        return new JsonResponse($assignableUsers);
+    }
+
+    #[Route('/{userId}/workload', name: 'user_workload', methods: ['GET'])]
+    #[IsGranted('ROLE_PROJECT_MANAGER')]
+    public function getUserWorkload(int $userId): JsonResponse
+    {
+        $user = $this->userRepository->find($userId);
+        if (!$user) {
+            return new JsonResponse(['error' => 'Utilisateur non trouvé'], 404);
+        }
+
+        $workload = $this->calculateUserWorkload($user);
+        $tasks = $this->taskRepository->findBy(['assignee' => $user]);
+        
+        $taskDetails = [];
+        foreach ($tasks as $task) {
+            $taskDetails[] = [
+                'id' => $task->getId(),
+                'title' => $task->getTitle(),
+                'description' => $task->getDescription(),
+                'estimatedHours' => $task->getEstimatedHours(),
+                'actualHours' => $task->getActualHours(),
+                'dueDate' => $task->getDueDate() ? $task->getDueDate()->format('Y-m-d') : null,
+                'status' => $task->getStatus(),
+                'priority' => $task->getPriority(),
+                'project' => $task->getProject() ? [
+                    'id' => $task->getProject()->getId(),
+                    'name' => $task->getProject()->getName()
+                ] : null
+            ];
+        }
+
+        return new JsonResponse([
+            'userId' => $user->getId(),
+            'userName' => $user->getFirstName() . ' ' . $user->getLastName(),
+            'currentWeekHours' => $workload['currentWeekHours'],
+            'maxWeekHours' => $workload['maxWeekHours'],
+            'utilizationPercentage' => $workload['utilizationPercentage'],
+            'remainingCapacity' => $workload['maxWeekHours'] - $workload['currentWeekHours'],
+            'tasks' => $taskDetails,
+            'skills' => $this->getUserSkills($user)
+        ]);
+    }
+
+    #[Route('/{userId}/tasks', name: 'user_tasks', methods: ['GET'])]
+    #[IsGranted('ROLE_PROJECT_MANAGER')]
+    public function getUserTasks(int $userId): JsonResponse
+    {
+        $user = $this->userRepository->find($userId);
+        if (!$user) {
+            return new JsonResponse(['error' => 'Utilisateur non trouvé'], 404);
+        }
+
+        $tasks = $this->taskRepository->findBy(['assignee' => $user]);
+        
+        $taskDetails = [];
+        foreach ($tasks as $task) {
+            $taskDetails[] = [
+                'id' => $task->getId(),
+                'title' => $task->getTitle(),
+                'description' => $task->getDescription(),
+                'status' => $task->getStatus(),
+                'priority' => $task->getPriority(),
+                'estimatedHours' => $task->getEstimatedHours(),
+                'actualHours' => $task->getActualHours(),
+                'dueDate' => $task->getDueDate() ? $task->getDueDate()->format('Y-m-d') : null,
+                'createdAt' => $task->getCreatedAt() ? $task->getCreatedAt()->format('Y-m-d H:i:s') : null,
+                'project' => $task->getProject() ? [
+                    'id' => $task->getProject()->getId(),
+                    'name' => $task->getProject()->getName()
+                ] : null
+            ];
+        }
+
+        return new JsonResponse($taskDetails);
+    }
+
+    #[Route('/my-tasks', name: 'my_tasks', methods: ['GET'])]
+    public function getMyTasks(): JsonResponse
     {
         $user = $this->getUser();
         if (!$user) {
-            return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
+            return new JsonResponse(['error' => 'Non authentifié'], 401);
         }
 
-        // Seuls les admins peuvent voir tous les utilisateurs
-        if (!in_array('ROLE_ADMIN', $user->getRoles())) {
-            return $this->json(['message' => 'Accès refusé'], Response::HTTP_FORBIDDEN);
-        }
-
-        $users = $this->userRepository->findAll();
+        $tasks = $this->taskRepository->findBy(['assignee' => $user]);
         
-        $usersData = array_map(function (User $user) {
-            return [
-                'id' => $user->getId(),
-                'email' => $user->getEmail(),
-                'firstName' => $user->getFirstName(),
-                'lastName' => $user->getLastName(),
-                'company' => $user->getCompany(),
-                'roles' => $user->getRoles(),
-                'createdAt' => $user->getCreatedAt()->format('Y-m-d H:i:s'),
-                'updatedAt' => $user->getUpdatedAt()->format('Y-m-d H:i:s'),
+        $taskDetails = [];
+        foreach ($tasks as $task) {
+            $taskDetails[] = [
+                'id' => $task->getId(),
+                'title' => $task->getTitle(),
+                'description' => $task->getDescription(),
+                'status' => $task->getStatus(),
+                'priority' => $task->getPriority(),
+                'estimatedHours' => $task->getEstimatedHours(),
+                'actualHours' => $task->getActualHours(),
+                'dueDate' => $task->getDueDate() ? $task->getDueDate()->format('Y-m-d') : null,
+                'createdAt' => $task->getCreatedAt() ? $task->getCreatedAt()->format('Y-m-d H:i:s') : null,
+                'project' => $task->getProject() ? [
+                    'id' => $task->getProject()->getId(),
+                    'name' => $task->getProject()->getName(),
+                    'description' => $task->getProject()->getDescription()
+                ] : null,
+                'assignee' => $task->getAssignee() ? [
+                    'id' => $task->getAssignee()->getId(),
+                    'firstName' => $task->getAssignee()->getFirstName(),
+                    'lastName' => $task->getAssignee()->getLastName(),
+                    'email' => $task->getAssignee()->getEmail()
+                ] : null
             ];
-        }, $users);
+        }
 
-        return $this->json($usersData);
+        return new JsonResponse($taskDetails);
     }
 
-    #[Route('/{id}', name: 'api_users_show', methods: ['GET'])]
-    public function show(int $id): JsonResponse
+    private function calculateUserWorkload(User $user): array
     {
-        $user = $this->userRepository->find($id);
+        $maxWeekHours = 35; // 8h/jour × 5 jours - 5h de marge
+        $tasks = $this->taskRepository->findBy(['assignee' => $user]);
         
-        if (!$user) {
-            return $this->json(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+        $currentWeekHours = 0;
+        foreach ($tasks as $task) {
+            $currentWeekHours += $task->getEstimatedHours() ?? 0;
         }
-
-        return $this->json([
-            'id' => $user->getId(),
-            'email' => $user->getEmail(),
-            'firstName' => $user->getFirstName(),
-            'lastName' => $user->getLastName(),
-            'company' => $user->getCompany(),
-            'roles' => $user->getRoles(),
-            'createdAt' => $user->getCreatedAt()->format('Y-m-d H:i:s'),
-            'updatedAt' => $user->getUpdatedAt()->format('Y-m-d H:i:s'),
-        ]);
+        
+        $utilizationPercentage = $maxWeekHours > 0 ? ($currentWeekHours / $maxWeekHours) * 100 : 0;
+        
+        return [
+            'currentWeekHours' => $currentWeekHours,
+            'maxWeekHours' => $maxWeekHours,
+            'utilizationPercentage' => $utilizationPercentage
+        ];
     }
 
-    #[Route('/{id}', name: 'api_users_update', methods: ['PUT'])]
-    public function update(int $id, Request $request): JsonResponse
+    private function getUserSkills(User $user): array
     {
-        $user = $this->userRepository->find($id);
-        
-        if (!$user) {
-            return $this->json(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
-        }
-
-        $data = json_decode($request->getContent(), true);
-        
-        if (!$data) {
-            return $this->json(['message' => 'Données invalides'], Response::HTTP_BAD_REQUEST);
-        }
-
-        if (isset($data['firstName'])) {
-            $user->setFirstName($data['firstName']);
-        }
-        if (isset($data['lastName'])) {
-            $user->setLastName($data['lastName']);
-        }
-        if (isset($data['email'])) {
-            $user->setEmail($data['email']);
-        }
-        if (isset($data['company'])) {
-            $user->setCompany($data['company']);
-        }
-        if (isset($data['roles'])) {
-            $user->setRoles($data['roles']);
-        }
-
-        $errors = $this->validator->validate($user);
-        if (count($errors) > 0) {
-            $errorMessages = [];
-            foreach ($errors as $error) {
-                $errorMessages[] = $error->getMessage();
-            }
-            return $this->json(['message' => 'Erreur de validation: ' . implode(', ', $errorMessages)], Response::HTTP_BAD_REQUEST);
-        }
-
-        $this->entityManager->flush();
-
-        return $this->json([
-            'message' => 'Utilisateur mis à jour avec succès',
-            'user' => [
-                'id' => $user->getId(),
-                'email' => $user->getEmail(),
-                'firstName' => $user->getFirstName(),
-                'lastName' => $user->getLastName(),
-                'company' => $user->getCompany(),
-                'roles' => $user->getRoles(),
-            ]
-        ]);
-    }
-
-    #[Route('/{id}', name: 'api_users_delete', methods: ['DELETE'])]
-    public function delete(int $id): JsonResponse
-    {
-        $user = $this->userRepository->find($id);
-        
-        if (!$user) {
-            return $this->json(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
-        }
-
-        $this->entityManager->remove($user);
-        $this->entityManager->flush();
-
-        return $this->json(['message' => 'Utilisateur supprimé avec succès']);
+        // Pour l'instant, retourner un tableau vide
+        // Dans un vrai système, on récupérerait les compétences de l'utilisateur
+        return [];
     }
 }

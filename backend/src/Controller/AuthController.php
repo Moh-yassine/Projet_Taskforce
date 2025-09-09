@@ -4,7 +4,9 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Repository\UserRepository;
+use App\Service\PermissionService;
 use Doctrine\ORM\EntityManagerInterface;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,7 +22,9 @@ class AuthController extends AbstractController
         private EntityManagerInterface $entityManager,
         private UserPasswordHasherInterface $passwordHasher,
         private UserRepository $userRepository,
-        private ValidatorInterface $validator
+        private ValidatorInterface $validator,
+        private JWTTokenManagerInterface $jwtManager,
+        private PermissionService $permissionService
     ) {}
 
     #[Route('/register', name: 'app_register', methods: ['POST'])]
@@ -48,7 +52,7 @@ class AuthController extends AbstractController
         $user->setLastName($data['lastName']);
         $user->setEmail($data['email']);
         $user->setCompany($data['company'] ?? null);
-        $user->setRoles(['ROLE_USER']); // Rôle par défaut pour tous les utilisateurs
+        $user->setRoles(['ROLE_COLLABORATOR', 'ROLE_USER']); // Rôle par défaut pour tous les utilisateurs
 
         $hashedPassword = $this->passwordHasher->hashPassword($user, $data['password']);
         $user->setPassword($hashedPassword);
@@ -95,8 +99,12 @@ class AuthController extends AbstractController
             return $this->json(['message' => 'Email ou mot de passe incorrect'], Response::HTTP_UNAUTHORIZED);
         }
 
+        // Générer le token JWT manuellement
+        $token = $this->jwtManager->create($user);
+        
         return $this->json([
             'message' => 'Connexion réussie',
+            'token' => $token,
             'user' => [
                 'id' => $user->getId(),
                 'email' => $user->getEmail(),
@@ -104,10 +112,10 @@ class AuthController extends AbstractController
                 'lastName' => $user->getLastName(),
                 'company' => $user->getCompany(),
                 'roles' => $user->getRoles(),
+                'permissions' => $this->permissionService->getUserPermissions($user),
                 'createdAt' => $user->getCreatedAt()->format('c'),
                 'updatedAt' => $user->getUpdatedAt()->format('c')
-            ],
-            'token' => 'fake-jwt-token-' . $user->getId()
+            ]
         ]);
     }
 
@@ -127,6 +135,7 @@ class AuthController extends AbstractController
             'lastName' => $user->getLastName(),
             'company' => $user->getCompany(),
             'roles' => $user->getRoles(),
+            'permissions' => $this->permissionService->getUserPermissions($user),
             'createdAt' => $user->getCreatedAt()->format('c'),
             'updatedAt' => $user->getUpdatedAt()->format('c')
         ]);

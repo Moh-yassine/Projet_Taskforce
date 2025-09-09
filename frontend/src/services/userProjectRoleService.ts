@@ -1,3 +1,5 @@
+import { authService } from './authService';
+
 export interface UserProjectRole {
   id: number;
   projectId: number;
@@ -13,7 +15,7 @@ export interface CreateUserProjectRoleData {
 }
 
 class UserProjectRoleService {
-  private readonly API_BASE_URL = 'http://localhost:8003/api/user-project-roles';
+  private readonly API_BASE_URL = '/api/user-project-roles';
 
   async getUserProjectRoles(): Promise<UserProjectRole[]> {
     const token = localStorage.getItem('authToken');
@@ -25,7 +27,7 @@ class UserProjectRoleService {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        ...authService.getAuthHeaders(),
       },
     });
 
@@ -49,7 +51,7 @@ class UserProjectRoleService {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        ...authService.getAuthHeaders(),
       },
       body: JSON.stringify(data),
     });
@@ -75,7 +77,7 @@ class UserProjectRoleService {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        ...authService.getAuthHeaders(),
       },
     });
 
