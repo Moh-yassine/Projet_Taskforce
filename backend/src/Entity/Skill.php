@@ -31,10 +31,14 @@ class Skill
     #[ORM\ManyToMany(targetEntity: User::class, mappedBy: 'skills')]
     private Collection $users;
 
+    #[ORM\OneToMany(mappedBy: 'skill', targetEntity: UserSkill::class, cascade: ['persist', 'remove'])]
+    private Collection $userSkills;
+
     public function __construct()
     {
         $this->tasks = new ArrayCollection();
         $this->users = new ArrayCollection();
+        $this->userSkills = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -110,6 +114,33 @@ class Skill
     {
         if ($this->users->removeElement($user)) {
             $user->removeSkill($this);
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, UserSkill>
+     */
+    public function getUserSkills(): Collection
+    {
+        return $this->userSkills;
+    }
+
+    public function addUserSkill(UserSkill $userSkill): static
+    {
+        if (!$this->userSkills->contains($userSkill)) {
+            $this->userSkills->add($userSkill);
+            $userSkill->setSkill($this);
+        }
+        return $this;
+    }
+
+    public function removeUserSkill(UserSkill $userSkill): static
+    {
+        if ($this->userSkills->removeElement($userSkill)) {
+            if ($userSkill->getSkill() === $this) {
+                $userSkill->setSkill(null);
+            }
         }
         return $this;
     }

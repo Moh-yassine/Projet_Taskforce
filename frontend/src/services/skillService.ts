@@ -1,3 +1,5 @@
+import { authService } from './authService';
+
 export interface Skill {
   id: number;
   name: string;
@@ -5,13 +7,13 @@ export interface Skill {
 }
 
 class SkillService {
-  private readonly API_BASE_URL = 'http://localhost:8003/api/skills';
+  private readonly API_BASE_URL = '/api/skills';
 
   async getSkills(): Promise<Skill[]> {
     const response = await fetch(this.API_BASE_URL, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json',
+        ...authService.getAuthHeaders(),
       },
     });
 
@@ -26,7 +28,7 @@ class SkillService {
     const response = await fetch(this.API_BASE_URL, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        ...authService.getAuthHeaders(),
       },
       body: JSON.stringify(data),
     });
@@ -43,7 +45,7 @@ class SkillService {
     const response = await fetch(`${this.API_BASE_URL}/${id}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
+        ...authService.getAuthHeaders(),
       },
       body: JSON.stringify(data),
     });
@@ -60,7 +62,7 @@ class SkillService {
     const response = await fetch(`${this.API_BASE_URL}/${id}`, {
       method: 'DELETE',
       headers: {
-        'Content-Type': 'application/json',
+        ...authService.getAuthHeaders(),
       },
     });
 
