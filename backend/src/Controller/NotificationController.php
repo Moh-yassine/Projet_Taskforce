@@ -119,15 +119,76 @@ final class NotificationController extends AbstractController
     #[Route('/{id}/read', name: 'notification_mark_read', methods: ['PUT'])]
     public function markAsRead(int $id): JsonResponse
     {
-        $notification = $this->notificationRepository->find($id);
-        if (!$notification) {
-            return $this->json(['error' => 'Notification not found'], 404);
+        try {
+            $notification = $this->notificationRepository->find($id);
+            if (!$notification) {
+                return $this->json(['error' => 'Notification not found'], 404);
+            }
+
+            $notification->setIsRead(true);
+            $this->entityManager->persist($notification);
+            $this->entityManager->flush();
+
+            error_log(sprintf('Notification %d marked as read', $id));
+
+            return $this->json($notification, 200, [], ['groups' => ['notification:read']]);
+        } catch (\Exception $e) {
+            error_log('Error marking notification as read: ' . $e->getMessage());
+            return $this->json(['error' => 'Internal server error'], 500);
         }
+    }
 
-        $notification->setIsRead(true);
-        $this->entityManager->flush();
+    #[Route('/{id}/unread', name: 'notification_mark_unread', methods: ['PUT'])]
+    public function markAsUnread(int $id): JsonResponse
+    {
+        try {
+            $notification = $this->notificationRepository->find($id);
+            if (!$notification) {
+                return $this->json(['error' => 'Notification not found'], 404);
+            }
 
-        return $this->json($notification, 200, [], ['groups' => ['notification:read']]);
+            $notification->setIsRead(false);
+            $this->entityManager->persist($notification);
+            $this->entityManager->flush();
+
+            error_log(sprintf('Notification %d marked as unread', $id));
+
+            return $this->json($notification, 200, [], ['groups' => ['notification:read']]);
+        } catch (\Exception $e) {
+            error_log('Error marking notification as unread: ' . $e->getMessage());
+            return $this->json(['error' => 'Internal server error'], 500);
+        }
+    }
+
+    #[Route('/{id}/toggle', name: 'notification_toggle_read', methods: ['PUT'])]
+    public function toggleReadStatus(int $id): JsonResponse
+    {
+        try {
+            $notification = $this->notificationRepository->find($id);
+            if (!$notification) {
+                return $this->json(['error' => 'Notification not found'], 404);
+            }
+
+            $oldStatus = $notification->isRead();
+            $newStatus = !$oldStatus;
+            
+            $notification->setIsRead($newStatus);
+            $this->entityManager->persist($notification);
+            $this->entityManager->flush();
+
+            // Log du changement pour traçabilité
+            error_log(sprintf(
+                'Notification %d status changed from %s to %s',
+                $id,
+                $oldStatus ? 'read' : 'unread',
+                $newStatus ? 'read' : 'unread'
+            ));
+
+            return $this->json($notification, 200, [], ['groups' => ['notification:read']]);
+        } catch (\Exception $e) {
+            error_log('Error toggling notification status: ' . $e->getMessage());
+            return $this->json(['error' => 'Internal server error'], 500);
+        }
     }
 
     #[Route('/user/{userId}/read-all', name: 'notifications_mark_all_read', methods: ['PUT'])]

@@ -34,16 +34,53 @@ class NotificationService {
   /**
    * Marque une notification comme lue
    */
-  async markAsRead(notificationId: number): Promise<void> {
+  async markAsRead(notificationId: number): Promise<Notification> {
     try {
       const token = localStorage.getItem('authToken')
-      await axios.patch(`${API_BASE_URL}/notifications/${notificationId}/read`, {}, {
+      const response = await axios.put(`${API_BASE_URL}/notifications/${notificationId}/read`, {}, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       })
+      return response.data
     } catch (error) {
       console.error('Erreur lors du marquage de la notification comme lue:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Marque une notification comme non lue
+   */
+  async markAsUnread(notificationId: number): Promise<Notification> {
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await axios.put(`${API_BASE_URL}/notifications/${notificationId}/unread`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors du marquage de la notification comme non lue:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Bascule l'état de lecture d'une notification
+   */
+  async toggleReadStatus(notificationId: number): Promise<Notification> {
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await axios.put(`${API_BASE_URL}/notifications/${notificationId}/toggle`, {}, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors du basculement de l\'état de la notification:', error)
       throw error
     }
   }
