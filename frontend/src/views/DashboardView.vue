@@ -26,7 +26,8 @@
                 <span>Mes tâches</span>
               </router-link>
             </li>
-            <li class="nav-item">
+            <!-- Projets - Visible seulement pour le Responsable de Projet -->
+            <li v-if="canManageProjects" class="nav-item">
               <a href="#" class="nav-link" @click.prevent="showProjects = true; showWelcome = false">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
@@ -34,7 +35,8 @@
                 <span>Projets</span>
               </a>
             </li>
-            <li class="nav-item">
+            <!-- Admin - Visible pour le Responsable de Projet et le Manager -->
+            <li v-if="canAccessAdmin" class="nav-item">
               <router-link to="/admin" class="nav-link">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H19C20.11 23 21 22.11 21 21V9M19 9H14V4H5V21H19V9Z"/>
@@ -82,21 +84,53 @@
         <!-- Section de bienvenue -->
         <div v-if="showWelcome" class="welcome-section">
           <h2>Bienvenue, {{ user?.firstName }} !</h2>
-          <p>Gérez vos projets et tâches depuis votre tableau de bord personnel.</p>
+          
+          <!-- Message personnalisé selon le rôle -->
+          <div v-if="isProjectManager" class="role-message">
+            <p>En tant que <strong>Responsable de Projet</strong>, vous avez accès à toutes les fonctionnalités de TaskForce.</p>
+            <p>Gérez vos projets, assignez des tâches et supervisez l'équipe depuis votre tableau de bord.</p>
+          </div>
+          <div v-else-if="user?.permissions?.primaryRole === 'ROLE_MANAGER'" class="role-message">
+            <p>En tant que <strong>Manager</strong>, vous pouvez superviser les tâches et consulter les rapports.</p>
+            <p>Accédez aux fonctionnalités d'administration pour gérer les notifications et suivre les performances.</p>
+          </div>
+          <div v-else class="role-message">
+            <p>En tant que <strong>Collaborateur</strong>, consultez vos tâches assignées et suivez votre progression.</p>
+            <p>Restez informé de vos missions et deadlines depuis votre tableau de bord personnel.</p>
+          </div>
           
           <!-- Actions rapides -->
           <div class="quick-actions-section">
             <h3>Actions rapides</h3>
             <div class="quick-actions-grid">
-              <div class="quick-action-card" @click="viewMyTasks">
+              <!-- Actions selon le rôle -->
+              <div v-if="canManageProjects" class="quick-action-card" @click="showProjects = true; showWelcome = false">
                 <div class="quick-action-content">
-                  <h4>Voir mes tâches</h4>
-                  <p>Consultez vos tâches en cours</p>
-                  <button class="quick-action-btn">Voir</button>
-        </div>
-          </div>
+                  <h4>Gérer les projets</h4>
+                  <p>Créez et gérez vos projets</p>
+                  <button class="quick-action-btn">Gérer</button>
+                </div>
+              </div>
+              
+              <div v-if="canAccessAdmin" class="quick-action-card" @click="router.push('/admin')">
+                <div class="quick-action-content">
+                  <h4>Administration</h4>
+                  <p>Accédez aux outils d'administration</p>
+                  <button class="quick-action-btn">Admin</button>
+                </div>
+              </div>
+              
+              <!-- Action pour les collaborateurs -->
+              <div v-if="isCollaborator" class="quick-action-card" @click="router.push('/my-tasks')">
+                <div class="quick-action-content">
+                  <h4>Mes tâches</h4>
+                  <p>Consultez et gérez vos tâches assignées</p>
+                  <button class="quick-action-btn">Voir mes tâches</button>
+                </div>
+              </div>
             </div>
           </div>
+
         </div>
 
         <!-- Section Premium -->
@@ -118,7 +152,9 @@
                 <h3 class="premium-title">Débloquez tout le potentiel de TaskForce</h3>
                 <p class="premium-description">Accédez à des fonctionnalités avancées, rapports détaillés et support prioritaire pour optimiser votre gestion de projets.</p>
                 <button class="premium-btn" @click="tryPremiumTaskforce">
-                  <span class="premium-btn-text">ESSAYER PREMIUM TASKFORCE</span>
+                  <span class="premium-btn-text">
+                    {{ hasActiveSubscription ? 'ACCÉDER AUX FONCTIONNALITÉS PREMIUM' : 'ESSAYER PREMIUM TASKFORCE' }}
+                  </span>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
                   </svg>
@@ -217,10 +253,11 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService, type User } from '@/services/authService'
 import { projectService, type Project } from '@/services/projectService'
+import { paymentService } from '@/services/paymentService'
 import CreateProjectModal from '@/components/CreateProjectModal.vue'
 import AvatarSelector from '@/components/AvatarSelector.vue'
 
@@ -228,14 +265,35 @@ const router = useRouter()
 const user = ref<User | null>(null)
 const projects = ref<Project[]>([])
 const showCreateProjectModal = ref(false)
-const isLoading = ref(false)
+const hasActiveSubscription = ref(false)
+
+
 const showDeleteModal = ref(false)
 const projectToDelete = ref<Project | null>(null)
 const isDeleting = ref(false)
+const isLoading = ref(false)
 
 // Variables pour l'affichage conditionnel
 const showWelcome = ref(true)
 const showProjects = ref(false)
+
+// Computed properties pour les permissions
+const canManageProjects = computed(() => {
+  return user.value?.permissions?.canManageProjects || false
+})
+
+const canAccessAdmin = computed(() => {
+  return user.value?.permissions?.canAccessAdmin || false
+})
+
+
+const isProjectManager = computed(() => {
+  return user.value?.permissions?.primaryRole === 'ROLE_PROJECT_MANAGER'
+})
+
+const isCollaborator = computed(() => {
+  return user.value?.permissions?.primaryRole === 'ROLE_COLLABORATOR'
+})
 
 onMounted(async () => {
   if (!authService.isAuthenticated()) {
@@ -245,6 +303,7 @@ onMounted(async () => {
 
   user.value = authService.getCurrentUser()
   await loadProjects()
+  await checkSubscriptionStatus()
   
   // Fermer le menu profil quand on clique ailleurs
 })
@@ -254,10 +313,12 @@ const handleLogout = () => {
   router.push('/')
 }
 
+
 const formatDate = (dateString?: string) => {
   if (!dateString) return 'N/A'
   return new Date(dateString).toLocaleDateString('fr-FR')
 }
+
 
 const openCreateProjectModal = () => {
   showCreateProjectModal.value = true
@@ -273,14 +334,24 @@ const handleProjectCreated = async (project: any) => {
   await loadProjects() // Rafraîchir la liste des projets
 }
 
-const viewMyTasks = () => {
-  router.push('/my-tasks')
+
+const checkSubscriptionStatus = async () => {
+  try {
+    const response = await paymentService.getSubscriptionStatus()
+    hasActiveSubscription.value = response.hasActiveSubscription
+  } catch (error) {
+    console.error('Erreur lors de la vérification du statut d\'abonnement:', error)
+  }
 }
 
 const tryPremiumTaskforce = () => {
-  // Pour l'instant, afficher une alerte
-  // Plus tard, rediriger vers une page de souscription ou ouvrir une modal
-  alert('🚀 Premium TaskForce bientôt disponible !\n\nDécouvrez bientôt :\n• Rapports avancés et analytics\n• Support prioritaire 24/7\n• Fonctionnalités illimitées\n• Intégrations avancées\n\nRejoignez la liste d\'attente pour être notifié !')
+  if (hasActiveSubscription.value) {
+    // Si l'utilisateur a déjà un abonnement, rediriger vers la page premium
+    router.push('/premium')
+  } else {
+    // Sinon, rediriger vers la page de paiement
+    router.push('/payment')
+  }
 }
 
 
@@ -295,6 +366,7 @@ const loadProjects = async () => {
     isLoading.value = false
   }
 }
+
 
 const getStatusLabel = (status: string) => {
   const labels: Record<string, string> = {
@@ -1400,7 +1472,7 @@ const updateUserAvatar = (avatarUrl: string) => {
 }
 
 .quick-actions-section h3 {
-  color: white;
+  color: #1B263B;
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 1.5rem;
@@ -1419,32 +1491,34 @@ const updateUserAvatar = (avatarUrl: string) => {
   background: white;
   border-radius: 12px;
   padding: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(27, 38, 59, 0.1);
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
-    text-align: center;
-  }
+  text-align: center;
+  border: 2px solid #E0E1DD;
+}
 
 .quick-action-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 30px rgba(27, 38, 59, 0.2);
+  border-color: #415A77;
 }
 
 .quick-action-content h4 {
   font-size: 1.3rem;
   font-weight: 600;
-  color: #333;
+  color: #1B263B;
   margin: 0 0 0.5rem 0;
 }
 
 .quick-action-content p {
-  color: #666;
+  color: #415A77;
   margin: 0 0 1.5rem 0;
   line-height: 1.5;
 }
 
 .quick-action-btn {
-  background: #667eea;
+  background: #415A77;
   color: white;
   border: none;
   padding: 0.75rem 2rem;
@@ -1456,8 +1530,9 @@ const updateUserAvatar = (avatarUrl: string) => {
 }
 
 .quick-action-btn:hover {
-  background: #5a6fd8;
+  background: #1B263B;
 }
+
 
 /* Styles pour la section Premium */
 .premium-section {
@@ -1470,10 +1545,10 @@ const updateUserAvatar = (avatarUrl: string) => {
 
 .premium-card {
   position: relative;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1B263B 0%, #415A77 100%);
   border-radius: 20px;
   padding: 0;
-  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 12px 40px rgba(27, 38, 59, 0.3);
   cursor: pointer;
   transition: all 0.4s ease;
   overflow: hidden;
@@ -1499,7 +1574,7 @@ const updateUserAvatar = (avatarUrl: string) => {
 
 .premium-card:hover {
   transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 20px 60px rgba(27, 38, 59, 0.4);
 }
 
 .premium-background {
@@ -1508,7 +1583,7 @@ const updateUserAvatar = (avatarUrl: string) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1B263B 0%, #415A77 100%);
   border-radius: 17px;
 }
 
@@ -1952,5 +2027,31 @@ const updateUserAvatar = (avatarUrl: string) => {
   .btn {
     width: 100%;
   }
+}
+
+/* Styles pour les messages de rôle */
+.role-message {
+  background: linear-gradient(135deg, #1B263B 0%, #415A77 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 15px rgba(27, 38, 59, 0.3);
+}
+
+.role-message p {
+  margin: 0 0 8px 0;
+  line-height: 1.6;
+  color: white;
+}
+
+.role-message p:last-child {
+  margin-bottom: 0;
+}
+
+.role-message strong {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 </style>
