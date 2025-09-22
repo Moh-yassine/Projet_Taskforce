@@ -3,14 +3,10 @@
     <header class="tasks-header">
       <div class="header-content">
         <div class="header-left">
-          <button @click="goBack" class="btn btn-back">
-            ← Retour au dashboard
-          </button>
+          <button @click="goBack" class="btn btn-back">← Retour au dashboard</button>
           <h1>Mes tâches</h1>
         </div>
-        <button @click="handleLogout" class="btn btn-logout">
-          Se déconnecter
-        </button>
+        <button @click="handleLogout" class="btn btn-logout">Se déconnecter</button>
       </div>
     </header>
 
@@ -47,10 +43,10 @@
                 {{ getStatusLabel(task.status) }}
               </span>
             </div>
-            
+
             <div class="task-content">
               <p class="task-description">{{ task.description }}</p>
-              
+
               <div class="task-meta">
                 <div class="task-project">
                   <strong>Projet:</strong> {{ task.project?.name || 'Non assigné' }}
@@ -59,20 +55,14 @@
                   <div v-if="task.dueDate">
                     <strong>Échéance:</strong> {{ formatDate(task.dueDate) }}
                   </div>
-                  <div>
-                    <strong>Créée:</strong> {{ formatDate(task.createdAt) }}
-                  </div>
+                  <div><strong>Créée:</strong> {{ formatDate(task.createdAt) }}</div>
                 </div>
               </div>
             </div>
 
             <div class="task-actions">
-              <button @click="viewTask(task)" class="btn btn-sm btn-primary">
-                Voir détails
-              </button>
-              <button @click="editTask(task)" class="btn btn-sm btn-secondary">
-                Modifier
-              </button>
+              <button @click="viewTask(task)" class="btn btn-sm btn-primary">Voir détails</button>
+              <button @click="editTask(task)" class="btn btn-sm btn-secondary">Modifier</button>
             </div>
           </div>
         </div>
@@ -96,21 +86,21 @@ const errorMessage = ref('')
 const mockTasks = [
   {
     id: 1,
-    title: 'Concevoir l\'interface utilisateur',
-    description: 'Créer les maquettes et prototypes pour l\'interface principale',
+    title: "Concevoir l'interface utilisateur",
+    description: "Créer les maquettes et prototypes pour l'interface principale",
     status: 'in_progress',
     project: { name: 'Application Web' },
     dueDate: '2025-09-10',
-    createdAt: '2025-09-01'
+    createdAt: '2025-09-01',
   },
   {
     id: 2,
-    title: 'Développer l\'API backend',
+    title: "Développer l'API backend",
     description: 'Implémenter les endpoints pour la gestion des utilisateurs',
     status: 'pending',
     project: { name: 'Application Web' },
     dueDate: '2025-09-15',
-    createdAt: '2025-09-02'
+    createdAt: '2025-09-02',
   },
   {
     id: 3,
@@ -119,8 +109,8 @@ const mockTasks = [
     status: 'completed',
     project: { name: 'Application Web' },
     dueDate: '2025-09-05',
-    createdAt: '2025-08-28'
-  }
+    createdAt: '2025-08-28',
+  },
 ]
 
 const loadTasks = async () => {
@@ -129,7 +119,7 @@ const loadTasks = async () => {
 
   try {
     // Simulation d'un appel API
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise((resolve) => setTimeout(resolve, 1000))
     tasks.value = mockTasks
   } catch (error) {
     errorMessage.value = 'Erreur lors du chargement des tâches'
@@ -143,7 +133,7 @@ const getStatusLabel = (status: string) => {
     pending: 'En attente',
     in_progress: 'En cours',
     completed: 'Terminé',
-    cancelled: 'Annulé'
+    cancelled: 'Annulé',
   }
   return labels[status] || status
 }
@@ -437,19 +427,19 @@ onMounted(() => {
   .header-content {
     padding: 0 1rem;
   }
-  
+
   .tasks-main {
     padding: 1rem;
   }
-  
+
   .tasks-section {
     padding: 1.5rem;
   }
-  
+
   .tasks-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .header-left {
     flex-direction: column;
     align-items: flex-start;

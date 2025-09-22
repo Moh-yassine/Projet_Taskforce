@@ -447,14 +447,6 @@
       <div v-if="isProjectManager" class="admin-section">
         <div class="section-header">
           <h2>Gestion des Utilisateurs</h2>
-          <button @click="refreshUsers" class="refresh-btn" :disabled="isLoading">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
-              />
-            </svg>
-            ACTUALISER
-          </button>
         </div>
         <div class="users-list">
           <div v-for="user in paginatedUsers" :key="user.id" class="user-item">
@@ -516,14 +508,6 @@
       <div v-if="isProjectManager" class="admin-section">
         <div class="section-header">
           <h2>Assignation Automatique</h2>
-          <button @click="refreshAssignmentData" class="refresh-btn" :disabled="isLoading">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
-              />
-            </svg>
-            ACTUALISER
-          </button>
         </div>
         
         <!-- Actions d'assignation -->
@@ -534,29 +518,34 @@
             </svg>
             ASSIGNER TOUTES LES TÂCHES
           </button>
-          <button @click="redistributeTasks" class="action-btn secondary" :disabled="isLoadingAssignment">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
-              />
-            </svg>
-            REDISTRIBUER LES TÂCHES
-          </button>
         </div>
 
         <!-- Statistiques en temps réel -->
-        <div class="assignment-stats">
-          <div class="stat-box">
-            <div class="stat-number">{{ assignmentStats.unassignedTasks }}</div>
-            <div class="stat-label">Tâches non assignées</div>
+        <div class="assignment-stats-main">
+          <div class="stat-card-large">
+            <div class="stat-icon-large unassigned">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+            </svg>
           </div>
-          <div class="stat-box">
-            <div class="stat-number">{{ assignmentStats.overloadedUsers }}</div>
-            <div class="stat-label">Utilisateurs surchargés</div>
+            <div class="stat-content-large">
+              <div class="stat-number-large">{{ assignmentStats.unassignedTasks }}</div>
+              <div class="stat-label-large">Tâches non assignées</div>
+              <div class="stat-description">Tâches en attente d'assignation automatique</div>
+            </div>
           </div>
-          <div class="stat-box">
-            <div class="stat-number">{{ assignmentStats.totalUsers }}</div>
-            <div class="stat-label">Utilisateurs total</div>
+          
+          <div class="stat-card-large">
+            <div class="stat-icon-large overloaded">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.89 1 3 1.89 3 3V21C3 22.11 3.89 23 5 23H19C20.11 23 21 22.11 21 21V9M19 9H14V4H5V21H19V9Z"/>
+              </svg>
+            </div>
+            <div class="stat-content-large">
+              <div class="stat-number-large">{{ assignmentStats.overloadedUsers }}</div>
+              <div class="stat-label-large">Utilisateurs surchargés</div>
+              <div class="stat-description">Utilisateurs nécessitant une redistribution</div>
+            </div>
           </div>
         </div>
 
@@ -615,9 +604,9 @@
                     <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
                   </svg>
                   Assigner
-                </button>
-              </div>
-            </div>
+          </button>
+        </div>
+          </div>
           </div>
           
           <!-- Pagination pour les tâches non assignées -->
@@ -642,7 +631,12 @@
 
         <!-- Utilisateurs surchargés -->
         <div v-if="overloadedUsers.length > 0" class="overloaded-users-section">
-          <h3>Utilisateurs surchargés ({{ overloadedUsers.length }})</h3>
+          <h3 class="overloaded-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="alert-icon">
+              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+            </svg>
+            Utilisateurs surchargés ({{ overloadedUsers.length }})
+          </h3>
           <div class="users-grid">
             <div v-for="userInfo in paginatedOverloadedUsers" :key="userInfo.user.id" class="user-card overloaded">
               <div class="user-header">
@@ -1080,10 +1074,6 @@ const loadNotifications = async () => {
   }
 }
 
-const refreshUsers = async () => {
-  await loadUsers()
-  await loadStats()
-}
 
 const refreshNotifications = async () => {
   await loadNotifications()
@@ -1142,11 +1132,6 @@ const loadAssignmentData = async () => {
   }
 }
 
-const refreshAssignmentData = async () => {
-  await loadAssignmentData()
-  await loadStats() // Refresh general stats too
-  success('Données actualisées', 'Les données d\'assignation ont été mises à jour')
-}
 
 const findCandidateForTask = async (task: UnassignedTask) => {
   try {
@@ -1214,29 +1199,6 @@ const assignAllTasks = async () => {
   }
 }
 
-const redistributeTasks = async () => {
-  try {
-    isLoadingAssignment.value = true
-    const result = await autoAssignmentService.redistributeTasks()
-    
-    if (result.redistributed > 0) {
-      success(
-        'Redistribution terminée',
-        `${result.redistributed} tâche(s) redistribuée(s) avec succès. ${result.failed} échec(s).`
-      )
-    } else {
-      info('Aucune redistribution', 'Aucune tâche n\'a nécessité de redistribution')
-    }
-    
-    // Rafraîchir les données
-    await loadAssignmentData()
-  } catch (err) {
-    console.error('Erreur lors de la redistribution des tâches:', err)
-    error('Erreur de redistribution', 'Erreur lors de la redistribution des tâches')
-  } finally {
-    isLoadingAssignment.value = false
-  }
-}
 
 const goToProjects = () => {
   router.push('/dashboard')
@@ -2638,31 +2600,72 @@ onMounted(async () => {
 }
 
 /* Styles pour l'assignation automatique */
-.assignment-stats {
-  display: flex;
-  gap: 1rem;
+.assignment-stats-main {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
-.assignment-stats .stat-box {
-  flex: 1;
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 0.5rem;
-  text-align: center;
-  border: 1px solid #e9ecef;
+.stat-card-large {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.assignment-stats .stat-box .stat-number {
-  font-size: 1.5rem;
+.stat-card-large:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.stat-icon-large {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.stat-icon-large.unassigned {
+  background: linear-gradient(135deg, #1b263b, #415a77);
+}
+
+.stat-icon-large.overloaded {
+  background: linear-gradient(135deg, #415a77, #778da9);
+}
+
+.stat-content-large {
+  flex: 1;
+}
+
+.stat-number-large {
+  font-size: 2.5rem;
   font-weight: 700;
+  color: #1b263b;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label-large {
+  font-size: 1.125rem;
+  font-weight: 600;
   color: #2c3e50;
   margin-bottom: 0.25rem;
 }
 
-.assignment-stats .stat-box .stat-label {
+.stat-description {
   font-size: 0.875rem;
-  color: #7f8c8d;
+  color: #6b7280;
+  line-height: 1.4;
 }
 
 .unassigned-tasks-section,
@@ -2678,9 +2681,33 @@ onMounted(async () => {
   margin-bottom: 1rem;
 }
 
+.overloaded-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.overloaded-title .alert-icon {
+  color: #e74c3c;
+  flex-shrink: 0;
+}
+
 .task-card.unassigned {
-  border-left: 4px solid #f39c12;
-  background: #fefbf3;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.task-card.unassigned:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .task-priority {
@@ -2756,8 +2783,17 @@ onMounted(async () => {
 }
 
 .user-card.overloaded {
-  border-left: 4px solid #e74c3c;
-  background: #fef5f5;
+  background: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.user-card.overloaded:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .user-header {
@@ -2817,19 +2853,22 @@ onMounted(async () => {
 }
 
 .workload-item .value.available {
-  color: #27ae60;
+  color: #415a77;
 }
 
 .workload-item .value.occupied {
-  color: #f39c12;
+  color: #415a77;
+  font-weight: 700;
 }
 
 .workload-item .value.busy {
-  color: #e67e22;
+  color: #1b263b;
+  font-weight: 700;
 }
 
 .workload-item .value.overloaded {
-  color: #e74c3c;
+  color: #1b263b;
+  font-weight: 700;
 }
 
 .workload-bar {
@@ -2852,19 +2891,19 @@ onMounted(async () => {
 }
 
 .workload-bar .progress-fill.available {
-  background: linear-gradient(90deg, #27ae60, #2ecc71);
+  background: linear-gradient(90deg, #778da9, #415a77);
 }
 
 .workload-bar .progress-fill.occupied {
-  background: linear-gradient(90deg, #f39c12, #e67e22);
+  background: linear-gradient(90deg, #415a77, #1b263b);
 }
 
 .workload-bar .progress-fill.busy {
-  background: linear-gradient(90deg, #e67e22, #d35400);
+  background: linear-gradient(90deg, #1b263b, #415a77);
 }
 
 .workload-bar .progress-fill.overloaded {
-  background: linear-gradient(90deg, #e74c3c, #c0392b);
+  background: linear-gradient(90deg, #1b263b, #415a77);
 }
 
 .workload-bar .progress-text {
@@ -2897,8 +2936,18 @@ onMounted(async () => {
     flex-direction: column;
   }
 
-  .assignment-stats {
+  .assignment-stats-main {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card-large {
     flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+
+  .stat-icon-large {
+    align-self: center;
   }
 
   /* Responsive pour les nouvelles grilles */

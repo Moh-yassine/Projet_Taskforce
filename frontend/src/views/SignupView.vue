@@ -137,7 +137,7 @@
             <label class="checkbox-container">
               <input type="checkbox" v-model="formData.acceptTerms" required />
               <span class="checkmark"></span>
-              J'accepte les <a href="#" class="link-primary"> conditions d'utilisation</a>
+              J'accepte les <a href="#" @click.prevent="showTermsModal = true" class="link-primary">conditions d'utilisation</a>
             </label>
           </div>
 
@@ -173,6 +173,65 @@
         </div>
       </div>
     </footer>
+
+    <!-- Modal des conditions d'utilisation -->
+    <div v-if="showTermsModal" class="modal-overlay" @click="showTermsModal = false">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>Conditions d'utilisation</h3>
+          <button @click="showTermsModal = false" class="modal-close">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="terms-content">
+            <h4>1. Acceptation des conditions</h4>
+            <p>En utilisant TaskForce, vous acceptez ces conditions d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser notre service.</p>
+
+            <h4>2. Description du service</h4>
+            <p>TaskForce est une plateforme de gestion de projets et d'assignation automatique de tâches qui permet aux équipes de collaborer efficacement.</p>
+
+            <h4>3. Compte utilisateur</h4>
+            <p>Vous êtes responsable de maintenir la confidentialité de votre compte et de votre mot de passe. Vous acceptez d'assumer la responsabilité de toutes les activités qui se produisent sous votre compte.</p>
+
+            <h4>4. Utilisation acceptable</h4>
+            <p>Vous vous engagez à utiliser TaskForce de manière légale et respectueuse. Il est interdit d'utiliser le service pour :</p>
+            <ul>
+              <li>Des activités illégales ou frauduleuses</li>
+              <li>Harceler ou nuire à d'autres utilisateurs</li>
+              <li>Transmettre des virus ou codes malveillants</li>
+              <li>Violer les droits de propriété intellectuelle</li>
+            </ul>
+
+            <h4>5. Protection des données</h4>
+            <p>Nous nous engageons à protéger vos données personnelles conformément à notre politique de confidentialité et au RGPD.</p>
+
+            <h4>6. Propriété intellectuelle</h4>
+            <p>TaskForce et son contenu sont protégés par les lois sur la propriété intellectuelle. Vous ne pouvez pas copier, modifier ou distribuer notre contenu sans autorisation.</p>
+
+            <h4>7. Limitation de responsabilité</h4>
+            <p>TaskForce est fourni "en l'état" sans garantie. Nous ne sommes pas responsables des dommages directs ou indirects résultant de l'utilisation du service.</p>
+
+            <h4>8. Modification des conditions</h4>
+            <p>Nous nous réservons le droit de modifier ces conditions à tout moment. Les modifications prendront effet dès leur publication sur le site.</p>
+
+            <h4>9. Résiliation</h4>
+            <p>Nous pouvons suspendre ou résilier votre compte à tout moment en cas de violation de ces conditions.</p>
+
+            <h4>10. Contact</h4>
+            <p>Pour toute question concernant ces conditions, contactez-nous à : support@taskforce.com</p>
+
+            <p class="terms-date"><strong>Dernière mise à jour :</strong> 22 septembre 2025</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="showTermsModal = false" class="btn btn-secondary">Fermer</button>
+          <button @click="acceptTerms" class="btn btn-primary">J'accepte</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -198,6 +257,7 @@ const showConfirmPassword = ref(false)
 const isLoading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
+const showTermsModal = ref(false)
 
 const togglePassword = () => {
   showPassword.value = !showPassword.value
@@ -237,6 +297,11 @@ const passwordStrengthText = computed(() => {
   if (passwordStrength.value <= 3) return 'Moyen'
   return 'Fort'
 })
+
+const acceptTerms = () => {
+  formData.acceptTerms = true
+  showTermsModal.value = false
+}
 
 const handleSignup = async () => {
   if (!passwordsMatch.value) {
@@ -640,6 +705,11 @@ select.form-input {
   font-size: 0.9rem;
   color: var(--text-secondary);
   line-height: 1.4;
+  word-spacing: normal;
+}
+
+.checkbox-container .link-primary {
+  margin-left: 0.25rem;
 }
 
 .checkbox-container input[type='checkbox'] {
@@ -774,6 +844,157 @@ select.form-input {
 
   .footer-section h3 {
     font-size: 1.8rem;
+  }
+}
+
+/* Modal des conditions d'utilisation */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 2rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background: var(--white);
+  border-radius: 16px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease-out;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.modal-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 1rem 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.terms-content h4 {
+  color: var(--primary-color);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.75rem 0;
+  padding-top: 1rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.terms-content h4:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.terms-content p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 1rem;
+}
+
+.terms-content ul {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0.5rem 0 1rem 1.5rem;
+}
+
+.terms-content li {
+  margin-bottom: 0.5rem;
+}
+
+.terms-date {
+  background: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1rem 2rem 2rem;
+  border-top: 1px solid #e1e5e9;
+}
+
+.modal-footer .btn {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 1rem;
+  }
+
+  .modal-content {
+    max-height: 90vh;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .modal-footer {
+    flex-direction: column;
+  }
+
+  .modal-footer .btn {
+    width: 100%;
   }
 }
 </style>
