@@ -8,6 +8,8 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
@@ -17,18 +19,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['task:read', 'user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
+    #[Groups(['user:read'])]
+    #[Assert\NotBlank(message: 'L\'email est requis')]
+    #[Assert\Email(message: 'L\'email doit être valide')]
     private ?string $email = null;
 
     #[ORM\Column]
+    #[Groups(['user:read'])]
     private array $roles = [];
 
     #[ORM\Column(length: 255)]
+    #[Groups(['task:read', 'user:read'])]
+    #[Assert\NotBlank(message: 'Le prénom est requis')]
+    #[Assert\Length(min: 2, max: 255, minMessage: 'Le prénom doit contenir au moins 2 caractères', maxMessage: 'Le prénom ne peut pas dépasser 255 caractères')]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['task:read', 'user:read'])]
+    #[Assert\NotBlank(message: 'Le nom est requis')]
+    #[Assert\Length(min: 2, max: 255, minMessage: 'Le nom doit contenir au moins 2 caractères', maxMessage: 'Le nom ne peut pas dépasser 255 caractères')]
     private ?string $lastName = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -38,6 +51,12 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $initialRole = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Le mot de passe est requis')]
+    #[Assert\Length(min: 8, minMessage: 'Le mot de passe doit contenir au moins 8 caractères')]
+    #[Assert\Regex(
+        pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/',
+        message: 'Le mot de passe doit contenir au moins une minuscule, une majuscule, un chiffre et un caractère spécial'
+    )]
     private ?string $password = null;
 
     #[ORM\Column]
@@ -67,6 +86,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Notification::class, cascade: ['persist', 'remove'])]
     private Collection $notifications;
 
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Subscription::class, cascade: ['persist', 'remove'])]
+    private Collection $subscriptions;
+
     public function __construct()
     {
         $this->managedProjects = new ArrayCollection();
@@ -75,6 +97,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->userSkills = new ArrayCollection();
         $this->workloads = new ArrayCollection();
         $this->notifications = new ArrayCollection();
+        $this->subscriptions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -419,5 +442,52 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             }
         }
         return $this;
+    }
+
+    /**
+     * @return Collection<int, Subscription>
+     */
+    public function getSubscriptions(): Collection
+    {
+        return $this->subscriptions;
+    }
+
+    public function addSubscription(Subscription $subscription): static
+    {
+        if (!$this->subscriptions->contains($subscription)) {
+            $this->subscriptions->add($subscription);
+            $subscription->setUser($this);
+        }
+        return $this;
+    }
+
+    public function removeSubscription(Subscription $subscription): static
+    {
+        if ($this->subscriptions->removeElement($subscription)) {
+            if ($subscription->getUser() === $this) {
+                $subscription->setUser(null);
+            }
+        }
+        return $this;
+    }
+
+    public function hasActivePremiumSubscription(): bool
+    {
+        foreach ($this->subscriptions as $subscription) {
+            if ($subscription->isPremium()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function getActivePremiumSubscription(): ?Subscription
+    {
+        foreach ($this->subscriptions as $subscription) {
+            if ($subscription->isPremium()) {
+                return $subscription;
+            }
+        }
+        return null;
     }
 }

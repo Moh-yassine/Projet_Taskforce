@@ -5,13 +5,17 @@
       <div class="header-actions">
         <button @click="refreshData" class="btn btn-secondary" :disabled="isLoading">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+            <path
+              d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"
+            />
           </svg>
           Actualiser
         </button>
         <button @click="checkDelays" class="btn btn-primary">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+            />
           </svg>
           Vérifier les retards
         </button>
@@ -34,7 +38,7 @@
               <p>Utilisateurs actifs</p>
             </div>
           </div>
-          
+
           <div class="overview-card">
             <div class="card-icon">⚠️</div>
             <div class="card-content">
@@ -42,7 +46,7 @@
               <p>En surcharge</p>
             </div>
           </div>
-          
+
           <div class="overview-card">
             <div class="card-icon">📊</div>
             <div class="card-content">
@@ -50,7 +54,7 @@
               <p>Utilisation moyenne</p>
             </div>
           </div>
-          
+
           <div class="overview-card">
             <div class="card-icon">🔔</div>
             <div class="card-content">
@@ -64,10 +68,10 @@
       <!-- Liste des utilisateurs -->
       <div class="users-section">
         <h3>Charge de travail par utilisateur</h3>
-        
+
         <div class="users-list">
-          <div 
-            v-for="userWorkload in usersWorkload" 
+          <div
+            v-for="userWorkload in usersWorkload"
             :key="userWorkload.userId"
             class="user-card"
             :class="{ 'user-overloaded': userWorkload.utilizationPercentage >= 100 }"
@@ -76,7 +80,10 @@
               <div class="user-info">
                 <h4>{{ userWorkload.userName }}</h4>
                 <div class="user-utilization">
-                  <span class="utilization-percentage" :style="{ color: getUtilizationColor(userWorkload.utilizationPercentage) }">
+                  <span
+                    class="utilization-percentage"
+                    :style="{ color: getUtilizationColor(userWorkload.utilizationPercentage) }"
+                  >
                     {{ userWorkload.utilizationPercentage.toFixed(1) }}%
                   </span>
                   <span class="utilization-hours">
@@ -84,15 +91,12 @@
                   </span>
                 </div>
               </div>
-              
+
               <div class="user-actions">
-                <button 
-                  @click="viewUserDetails(userWorkload)"
-                  class="btn btn-sm btn-secondary"
-                >
+                <button @click="viewUserDetails(userWorkload)" class="btn btn-sm btn-secondary">
                   Détails
                 </button>
-                <button 
+                <button
                   @click="assignTaskToUser(userWorkload)"
                   class="btn btn-sm btn-primary"
                   :disabled="userWorkload.utilizationPercentage >= 100"
@@ -105,11 +109,11 @@
             <!-- Barre de progression -->
             <div class="user-progress">
               <div class="progress-bar">
-                <div 
-                  class="progress-fill" 
-                  :style="{ 
+                <div
+                  class="progress-fill"
+                  :style="{
                     width: `${Math.min(userWorkload.utilizationPercentage, 100)}%`,
-                    backgroundColor: getUtilizationColor(userWorkload.utilizationPercentage)
+                    backgroundColor: getUtilizationColor(userWorkload.utilizationPercentage),
                   }"
                 ></div>
               </div>
@@ -120,13 +124,14 @@
               <div class="tasks-header">
                 <span>Tâches ({{ userWorkload.tasks.length }})</span>
                 <span class="tasks-hours">
-                  {{ userWorkload.tasks.reduce((sum, task) => sum + task.estimatedHours, 0) }}h total
+                  {{ userWorkload.tasks.reduce((sum, task) => sum + task.estimatedHours, 0) }}h
+                  total
                 </span>
               </div>
-              
+
               <div class="tasks-list">
-                <div 
-                  v-for="task in userWorkload.tasks.slice(0, 3)" 
+                <div
+                  v-for="task in userWorkload.tasks.slice(0, 3)"
                   :key="task.id"
                   class="task-item"
                 >
@@ -136,7 +141,7 @@
                     {{ getStatusLabel(task.status) }}
                   </span>
                 </div>
-                
+
                 <div v-if="userWorkload.tasks.length > 3" class="more-tasks">
                   +{{ userWorkload.tasks.length - 3 }} autres tâches
                 </div>
@@ -145,18 +150,34 @@
 
             <!-- Alertes de l'utilisateur -->
             <div v-if="userWorkload.alerts.length > 0" class="user-alerts">
-              <div 
-                v-for="alert in userWorkload.alerts" 
+              <div
+                v-for="alert in userWorkload.alerts"
                 :key="alert.id"
                 class="user-alert"
                 :class="'alert-' + alert.severity"
               >
                 <div class="alert-icon">
-                  <svg v-if="alert.type === 'overload'" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  <svg
+                    v-if="alert.type === 'overload'"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+                    />
                   </svg>
-                  <svg v-else-if="alert.type === 'delay'" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                  <svg
+                    v-else-if="alert.type === 'delay'"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
+                    />
                   </svg>
                 </div>
                 <span class="alert-message">{{ alert.message }}</span>
@@ -178,7 +199,7 @@ const isLoading = ref(false)
 
 // Computed properties
 const overloadedUsers = computed(() => {
-  return usersWorkload.value.filter(user => user.utilizationPercentage >= 100)
+  return usersWorkload.value.filter((user) => user.utilizationPercentage >= 100)
 })
 
 const averageUtilization = computed(() => {
@@ -243,7 +264,7 @@ const getStatusLabel = (status: string) => {
     todo: 'À faire',
     in_progress: 'En cours',
     completed: 'Terminé',
-    on_hold: 'En attente'
+    on_hold: 'En attente',
   }
   return labels[status] || status
 }
@@ -299,8 +320,12 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .overview-section {
@@ -481,10 +506,22 @@ onMounted(() => {
   font-weight: 500;
 }
 
-.status-todo { background: #e0e7ff; color: #3730a3; }
-.status-in_progress { background: #fef3c7; color: #92400e; }
-.status-completed { background: #d1fae5; color: #065f46; }
-.status-on_hold { background: #f3f4f6; color: #374151; }
+.status-todo {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+.status-in_progress {
+  background: #fef3c7;
+  color: #92400e;
+}
+.status-completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+.status-on_hold {
+  background: #f3f4f6;
+  color: #374151;
+}
 
 .more-tasks {
   text-align: center;
@@ -585,32 +622,32 @@ onMounted(() => {
   .workload-dashboard {
     padding: 1rem;
   }
-  
+
   .dashboard-header {
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
   }
-  
+
   .header-actions {
     justify-content: stretch;
   }
-  
+
   .btn {
     flex: 1;
     justify-content: center;
   }
-  
+
   .overview-cards {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .user-header {
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
   }
-  
+
   .user-actions {
     justify-content: stretch;
   }

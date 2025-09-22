@@ -74,9 +74,9 @@
           </div>
 
           <div class="projects-grid">
-            <div 
-              v-for="project in filteredProjects" 
-              :key="project.id" 
+            <div
+              v-for="project in filteredProjects"
+              :key="project.id"
               class="project-card"
               @click="openProject(project)"
             >
@@ -103,8 +103,8 @@
               </div>
               <div class="project-progress">
                 <div class="progress-bar">
-                  <div 
-                    class="progress-fill" 
+                  <div
+                    class="progress-fill"
                     :style="{ width: getProjectProgress(project) + '%' }"
                   ></div>
                 </div>
@@ -126,9 +126,9 @@
             <div class="kanban-column">
               <h3>À faire</h3>
               <div class="task-list">
-                <div 
-                  v-for="task in getTasksByStatus('todo')" 
-                  :key="task.id" 
+                <div
+                  v-for="task in getTasksByStatus('todo')"
+                  :key="task.id"
                   class="task-card"
                   @click="openTask(task)"
                 >
@@ -150,9 +150,9 @@
             <div class="kanban-column">
               <h3>En cours</h3>
               <div class="task-list">
-                <div 
-                  v-for="task in getTasksByStatus('in-progress')" 
-                  :key="task.id" 
+                <div
+                  v-for="task in getTasksByStatus('in-progress')"
+                  :key="task.id"
                   class="task-card"
                   @click="openTask(task)"
                 >
@@ -174,17 +174,15 @@
             <div class="kanban-column">
               <h3>Terminé</h3>
               <div class="task-list">
-                <div 
-                  v-for="task in getTasksByStatus('completed')" 
-                  :key="task.id" 
+                <div
+                  v-for="task in getTasksByStatus('completed')"
+                  :key="task.id"
                   class="task-card completed"
                   @click="openTask(task)"
                 >
                   <div class="task-header">
                     <h4>{{ task.title }}</h4>
-                    <span class="priority-badge priority-low">
-                      Terminé
-                    </span>
+                    <span class="priority-badge priority-low"> Terminé </span>
                   </div>
                   <p class="task-description">{{ task.description }}</p>
                   <div class="task-meta">
@@ -199,28 +197,28 @@
       </div>
     </main>
 
-    <CreateProjectModal 
-      v-if="showCreateProjectModal" 
+    <CreateProjectModal
+      v-if="showCreateProjectModal"
       @close="showCreateProjectModal = false"
       @project-created="handleProjectCreated"
     />
 
-    <CreateTaskModal 
-      v-if="showCreateTaskModal" 
+    <CreateTaskModal
+      v-if="showCreateTaskModal"
       :projects="projects"
       @close="showCreateTaskModal = false"
       @task-created="handleTaskCreated"
     />
 
-    <ProjectDetailModal 
-      v-if="selectedProject" 
+    <ProjectDetailModal
+      v-if="selectedProject"
       :project="selectedProject"
       @close="selectedProject = null"
       @project-updated="handleProjectUpdated"
     />
 
-    <TaskDetailModal 
-      v-if="selectedTask" 
+    <TaskDetailModal
+      v-if="selectedTask"
       :task="selectedTask"
       @close="selectedTask = null"
       @task-updated="handleTaskUpdated"
@@ -245,7 +243,7 @@ const stats = ref({
   totalProjects: 0,
   completedTasks: 0,
   overdueTasks: 0,
-  teamMembers: 0
+  teamMembers: 0,
 })
 
 const showCreateProjectModal = ref(false)
@@ -257,7 +255,7 @@ const showAllTasks = ref(false)
 
 const filteredProjects = computed(() => {
   if (!projectFilter.value) return projects.value
-  return projects.value.filter(project => project.status === projectFilter.value)
+  return projects.value.filter((project) => project.status === projectFilter.value)
 })
 
 onMounted(async () => {
@@ -277,11 +275,7 @@ onMounted(async () => {
 
 const loadDashboardData = async () => {
   try {
-    await Promise.all([
-      loadProjects(),
-      loadTasks(),
-      loadStats()
-    ])
+    await Promise.all([loadProjects(), loadTasks(), loadStats()])
   } catch (error) {
     console.error('Erreur lors du chargement des données:', error)
   }
@@ -291,8 +285,8 @@ const loadProjects = async () => {
   try {
     const response = await fetch('http://localhost:8000/api/projects', {
       headers: {
-        'Authorization': `Bearer ${authService.getAuthToken()}`
-      }
+        Authorization: `Bearer ${authService.getAuthToken()}`,
+      },
     })
     if (response.ok) {
       projects.value = await response.json()
@@ -306,8 +300,8 @@ const loadTasks = async () => {
   try {
     const response = await fetch('http://localhost:8000/api/tasks', {
       headers: {
-        'Authorization': `Bearer ${authService.getAuthToken()}`
-      }
+        Authorization: `Bearer ${authService.getAuthToken()}`,
+      },
     })
     if (response.ok) {
       tasks.value = await response.json()
@@ -321,25 +315,26 @@ const loadStats = async () => {
   try {
     const response = await fetch('http://localhost:8000/api/projects', {
       headers: {
-        'Authorization': `Bearer ${authService.getAuthToken()}`
-      }
+        Authorization: `Bearer ${authService.getAuthToken()}`,
+      },
     })
     if (response.ok) {
       const allProjects = await response.json()
       const allTasks = await fetch('http://localhost:8000/api/tasks', {
         headers: {
-          'Authorization': `Bearer ${authService.getAuthToken()}`
-        }
-      }).then(res => res.ok ? res.json() : [])
+          Authorization: `Bearer ${authService.getAuthToken()}`,
+        },
+      }).then((res) => (res.ok ? res.json() : []))
 
       stats.value = {
         totalProjects: allProjects.length,
-        completedTasks: allTasks.filter(t => t.status === 'completed').length,
-        overdueTasks: allTasks.filter(t => {
+        completedTasks: allTasks.filter((t) => t.status === 'completed').length,
+        overdueTasks: allTasks.filter((t) => {
           if (t.status === 'completed') return false
           return new Date(t.dueDate) < new Date()
         }).length,
-        teamMembers: new Set(allProjects.flatMap(p => p.teamMembers?.map(m => m.id) || [])).size
+        teamMembers: new Set(allProjects.flatMap((p) => p.teamMembers?.map((m) => m.id) || []))
+          .size,
       }
     }
   } catch (error) {
@@ -348,25 +343,25 @@ const loadStats = async () => {
 }
 
 const getTasksByStatus = (status: string) => {
-  return tasks.value.filter(task => task.status === status)
+  return tasks.value.filter((task) => task.status === status)
 }
 
 const getStatusLabel = (status: string) => {
   const labels = {
-    'planning': 'Planification',
-    'active': 'Actif',
+    planning: 'Planification',
+    active: 'Actif',
     'on-hold': 'En pause',
-    'completed': 'Terminé'
+    completed: 'Terminé',
   }
   return labels[status] || status
 }
 
 const getPriorityLabel = (priority: string) => {
   const labels = {
-    'low': 'Basse',
-    'medium': 'Moyenne',
-    'high': 'Haute',
-    'urgent': 'Urgente'
+    low: 'Basse',
+    medium: 'Moyenne',
+    high: 'Haute',
+    urgent: 'Urgente',
   }
   return labels[priority] || priority
 }
@@ -807,7 +802,7 @@ const handleLogout = () => {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .kanban-column {
     margin-bottom: 2rem;
   }
@@ -819,24 +814,24 @@ const handleLogout = () => {
     gap: 1rem;
     text-align: center;
   }
-  
+
   .header-right {
     flex-wrap: wrap;
     justify-content: center;
   }
-  
+
   .dashboard-main {
     padding: 1rem;
   }
-  
+
   .stats-overview {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .projects-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .section-header {
     flex-direction: column;
     gap: 1rem;

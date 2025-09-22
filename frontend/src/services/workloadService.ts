@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8003/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
 
 export interface WorkloadAlert {
   id: number
@@ -53,8 +53,8 @@ class WorkloadService {
       const token = localStorage.getItem('authToken')
       const response = await axios.get(`${API_BASE_URL}/workload/user/${userId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       })
       return response.data
     } catch (error) {
@@ -71,8 +71,8 @@ class WorkloadService {
       const token = localStorage.getItem('authToken')
       const response = await axios.get(`${API_BASE_URL}/workload/all`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       })
       return response.data
     } catch (error) {
@@ -84,7 +84,9 @@ class WorkloadService {
   /**
    * Assigne une tâche à un utilisateur avec vérification de la charge de travail
    */
-  async assignTask(assignment: TaskAssignment): Promise<{ success: boolean; message: string; alert?: WorkloadAlert }> {
+  async assignTask(
+    assignment: TaskAssignment,
+  ): Promise<{ success: boolean; message: string; alert?: WorkloadAlert }> {
     try {
       // Vérifier la charge de travail avant l'assignation
       const workload = await this.getUserWorkload(assignment.userId)
@@ -94,7 +96,7 @@ class WorkloadService {
       if (newTotalHours > this.MAX_WEEKLY_HOURS) {
         return {
           success: false,
-          message: `Assignation impossible : ${workload.userName} dépasserait sa charge de travail maximale (${newTotalHours}h > ${this.MAX_WEEKLY_HOURS}h)`
+          message: `Assignation impossible : ${workload.userName} dépasserait sa charge de travail maximale (${newTotalHours}h > ${this.MAX_WEEKLY_HOURS}h)`,
         }
       }
 
@@ -111,31 +113,35 @@ class WorkloadService {
           severity: utilizationPercentage >= 100 ? 'high' : 'medium',
           isRead: false,
           createdAt: new Date().toISOString(),
-          taskId: assignment.taskId
+          taskId: assignment.taskId,
         }
       }
 
       // Effectuer l'assignation
       const token = localStorage.getItem('authToken')
-      const response = await axios.post(`${API_BASE_URL}/tasks/${assignment.taskId}/assign`, {
-        userId: assignment.userId,
-        estimatedHours: assignment.estimatedHours,
-        dueDate: assignment.dueDate,
-        priority: assignment.priority
-      }, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
+      const response = await axios.post(
+        `${API_BASE_URL}/tasks/${assignment.taskId}/assign`,
+        {
+          userId: assignment.userId,
+          estimatedHours: assignment.estimatedHours,
+          dueDate: assignment.dueDate,
+          priority: assignment.priority,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      )
 
       return {
         success: true,
         message: 'Tâche assignée avec succès',
-        alert
+        alert,
       }
     } catch (error) {
-      console.error('Erreur lors de l\'assignation de la tâche:', error)
+      console.error("Erreur lors de l'assignation de la tâche:", error)
       throw error
     }
   }
@@ -146,7 +152,7 @@ class WorkloadService {
   async updateTaskHours(taskId: number, actualHours: number): Promise<void> {
     try {
       await axios.put(`${API_BASE_URL}/tasks/${taskId}/hours`, {
-        actualHours
+        actualHours,
       })
     } catch (error) {
       console.error('Erreur lors de la mise à jour des heures:', error)
@@ -174,7 +180,7 @@ class WorkloadService {
     try {
       await axios.put(`${API_BASE_URL}/workload/alerts/${alertId}/read`)
     } catch (error) {
-      console.error('Erreur lors de la mise à jour de l\'alerte:', error)
+      console.error("Erreur lors de la mise à jour de l'alerte:", error)
       throw error
     }
   }
@@ -197,9 +203,9 @@ class WorkloadService {
    */
   calculateOptimalAssignment(availableUsers: any[], estimatedHours: number): any[] {
     return availableUsers
-      .map(user => ({
+      .map((user) => ({
         ...user,
-        score: this.calculateAssignmentScore(user, estimatedHours)
+        score: this.calculateAssignmentScore(user, estimatedHours),
       }))
       .sort((a, b) => b.score - a.score)
   }
@@ -210,20 +216,20 @@ class WorkloadService {
   private calculateAssignmentScore(user: any, estimatedHours: number): number {
     const currentUtilization = (user.currentWeekHours / this.MAX_WEEKLY_HOURS) * 100
     const remainingCapacity = this.MAX_WEEKLY_HOURS - user.currentWeekHours
-    
+
     // Score basé sur la capacité restante (plus c'est élevé, mieux c'est)
-    let score = remainingCapacity / this.MAX_WEEKLY_HOURS * 100
-    
+    let score = (remainingCapacity / this.MAX_WEEKLY_HOURS) * 100
+
     // Pénalité si l'assignation dépasse la capacité
     if (estimatedHours > remainingCapacity) {
       score -= 50
     }
-    
+
     // Bonus si l'utilisateur a les compétences requises
     if (user.skills && user.skills.length > 0) {
       score += 20
     }
-    
+
     return Math.max(0, score)
   }
 

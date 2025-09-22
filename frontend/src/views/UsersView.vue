@@ -89,11 +89,21 @@
                 </td>
                 <td class="permissions-cell">
                   <div class="permissions-summary">
-                    <span v-if="user.permissions.canManageProjects" class="permission-tag">Gestion Projets</span>
-                    <span v-if="user.permissions.canSuperviseTasks" class="permission-tag">Supervision</span>
-                    <span v-if="user.permissions.canAssignTasks" class="permission-tag">Assignation</span>
-                    <span v-if="user.permissions.canViewReports" class="permission-tag">Rapports</span>
-                    <span v-if="user.permissions.canManageUsers" class="permission-tag">Gestion Users</span>
+                    <span v-if="user.permissions.canManageProjects" class="permission-tag"
+                      >Gestion Projets</span
+                    >
+                    <span v-if="user.permissions.canSuperviseTasks" class="permission-tag"
+                      >Supervision</span
+                    >
+                    <span v-if="user.permissions.canAssignTasks" class="permission-tag"
+                      >Assignation</span
+                    >
+                    <span v-if="user.permissions.canViewReports" class="permission-tag"
+                      >Rapports</span
+                    >
+                    <span v-if="user.permissions.canManageUsers" class="permission-tag"
+                      >Gestion Users</span
+                    >
                   </div>
                 </td>
                 <td class="date-cell">{{ formatDate(user.createdAt) }}</td>
@@ -121,9 +131,7 @@
           <div v-if="editingUser" class="edit-form">
             <div class="form-group">
               <label>Nom complet</label>
-              <div class="user-display">
-                {{ editingUser.firstName }} {{ editingUser.lastName }}
-              </div>
+              <div class="user-display">{{ editingUser.firstName }} {{ editingUser.lastName }}</div>
             </div>
             <div class="form-group">
               <label>Email</label>
@@ -140,9 +148,13 @@
             <div class="form-group">
               <label>Nouvelles permissions</label>
               <div class="permissions-preview">
-                <div v-for="(value, key) in getPreviewPermissions()" :key="key" class="permission-item">
+                <div
+                  v-for="(value, key) in getPreviewPermissions()"
+                  :key="key"
+                  class="permission-item"
+                >
                   <span class="permission-name">{{ getPermissionLabel(key) }}:</span>
-                  <span class="permission-value" :class="{ 'granted': value, 'denied': !value }">
+                  <span class="permission-value" :class="{ granted: value, denied: !value }">
                     {{ value ? '✓' : '✗' }}
                   </span>
                 </div>
@@ -163,7 +175,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { roleService, type UserWithPermissions, type Role, type UserPermissions } from '@/services/roleService'
+import {
+  roleService,
+  type UserWithPermissions,
+  type Role,
+  type UserPermissions,
+} from '@/services/roleService'
 
 const users = ref<UserWithPermissions[]>([])
 const availableRoles = ref<Role[]>([])
@@ -174,16 +191,16 @@ const editingUser = ref<UserWithPermissions | null>(null)
 const newRole = ref('')
 const saving = ref(false)
 
-const projectManagersCount = computed(() => 
-  users.value.filter(u => u.permissions.primaryRole === 'ROLE_PROJECT_MANAGER').length
+const projectManagersCount = computed(
+  () => users.value.filter((u) => u.permissions.primaryRole === 'ROLE_PROJECT_MANAGER').length,
 )
 
-const managersCount = computed(() => 
-  users.value.filter(u => u.permissions.primaryRole === 'ROLE_MANAGER').length
+const managersCount = computed(
+  () => users.value.filter((u) => u.permissions.primaryRole === 'ROLE_MANAGER').length,
 )
 
-const collaboratorsCount = computed(() => 
-  users.value.filter(u => u.permissions.primaryRole === 'ROLE_COLLABORATOR').length
+const collaboratorsCount = computed(
+  () => users.value.filter((u) => u.permissions.primaryRole === 'ROLE_COLLABORATOR').length,
 )
 
 const loadUsers = async () => {
@@ -228,13 +245,13 @@ const saveUserRole = async () => {
   try {
     saving.value = true
     const updatedUser = await roleService.assignRole(editingUser.value.id, newRole.value)
-    
+
     // Mettre à jour l'utilisateur dans la liste
-    const userIndex = users.value.findIndex(u => u.id === editingUser.value!.id)
+    const userIndex = users.value.findIndex((u) => u.id === editingUser.value!.id)
     if (userIndex !== -1) {
       users.value[userIndex] = updatedUser.user
     }
-    
+
     closeEditModal()
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Erreur lors de la sauvegarde'
@@ -249,25 +266,25 @@ const getRoleLabel = (role: string): string => {
 
 const getRoleClass = (role: string): string => {
   const roleClasses: Record<string, string> = {
-    'ROLE_PROJECT_MANAGER': 'role-project-manager',
-    'ROLE_MANAGER': 'role-manager',
-    'ROLE_COLLABORATOR': 'role-collaborator',
-    'ROLE_USER': 'role-user'
+    ROLE_PROJECT_MANAGER: 'role-project-manager',
+    ROLE_MANAGER: 'role-manager',
+    ROLE_COLLABORATOR: 'role-collaborator',
+    ROLE_USER: 'role-user',
   }
   return roleClasses[role] || 'role-default'
 }
 
 const getPermissionLabel = (key: string): string => {
   const permissionLabels: Record<string, string> = {
-    'canManageProjects': 'Gérer les projets',
-    'canSuperviseTasks': 'Superviser les tâches',
-    'canAssignTasks': 'Assigner les tâches',
-    'canViewAllTasks': 'Voir toutes les tâches',
-    'canViewReports': 'Voir les rapports',
-    'canManageUsers': 'Gérer les utilisateurs',
-    'canManageSkills': 'Gérer les compétences',
-    'canViewNotifications': 'Voir les notifications',
-    'canManageNotifications': 'Gérer les notifications'
+    canManageProjects: 'Gérer les projets',
+    canSuperviseTasks: 'Superviser les tâches',
+    canAssignTasks: 'Assigner les tâches',
+    canViewAllTasks: 'Voir toutes les tâches',
+    canViewReports: 'Voir les rapports',
+    canManageUsers: 'Gérer les utilisateurs',
+    canManageSkills: 'Gérer les compétences',
+    canViewNotifications: 'Voir les notifications',
+    canManageNotifications: 'Gérer les notifications',
   }
   return permissionLabels[key] || key
 }
@@ -275,7 +292,7 @@ const getPermissionLabel = (key: string): string => {
 const getPreviewPermissions = (): UserPermissions => {
   // Simuler les permissions basées sur le nouveau rôle
   const rolePermissions: Record<string, Partial<UserPermissions>> = {
-    'ROLE_PROJECT_MANAGER': {
+    ROLE_PROJECT_MANAGER: {
       canManageProjects: true,
       canSuperviseTasks: true,
       canAssignTasks: true,
@@ -284,9 +301,9 @@ const getPreviewPermissions = (): UserPermissions => {
       canManageUsers: true,
       canManageSkills: true,
       canViewNotifications: true,
-      canManageNotifications: true
+      canManageNotifications: true,
     },
-    'ROLE_MANAGER': {
+    ROLE_MANAGER: {
       canManageProjects: false,
       canSuperviseTasks: true,
       canAssignTasks: false,
@@ -295,9 +312,9 @@ const getPreviewPermissions = (): UserPermissions => {
       canManageUsers: false,
       canManageSkills: false,
       canViewNotifications: true,
-      canManageNotifications: true
+      canManageNotifications: true,
     },
-    'ROLE_COLLABORATOR': {
+    ROLE_COLLABORATOR: {
       canManageProjects: false,
       canSuperviseTasks: false,
       canAssignTasks: false,
@@ -306,11 +323,15 @@ const getPreviewPermissions = (): UserPermissions => {
       canManageUsers: false,
       canManageSkills: false,
       canViewNotifications: true,
-      canManageNotifications: false
-    }
+      canManageNotifications: false,
+    },
   }
 
-  return rolePermissions[newRole.value] as UserPermissions || editingUser.value?.permissions || {} as UserPermissions
+  return (
+    (rolePermissions[newRole.value] as UserPermissions) ||
+    editingUser.value?.permissions ||
+    ({} as UserPermissions)
+  )
 }
 
 const formatDate = (dateString: string): string => {
@@ -562,8 +583,12 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error {
@@ -692,22 +717,22 @@ onMounted(() => {
   .users-stats {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .table-header {
     flex-direction: column;
     gap: 16px;
     align-items: stretch;
   }
-  
+
   .users-table {
     font-size: 14px;
   }
-  
+
   .users-table th,
   .users-table td {
     padding: 12px 8px;
   }
-  
+
   .permissions-summary {
     flex-direction: column;
   }

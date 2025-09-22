@@ -2,20 +2,28 @@
   <div class="avatar-selector">
     <div class="avatar-preview">
       <div v-if="selectedAvatar" class="avatar-display">
-        <img :src="selectedAvatar.url" :alt="`Avatar ${selectedAvatar.style}`" class="avatar-image" />
+        <img
+          :src="selectedAvatar.url"
+          :alt="`Avatar ${selectedAvatar.style}`"
+          class="avatar-image"
+        />
       </div>
       <div v-else class="avatar-placeholder">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          <path
+            d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"
+          />
         </svg>
       </div>
     </div>
 
     <button @click="openAvatarSelection" class="btn-avatar-select">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+        <path
+          d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+        />
       </svg>
-      {{ selectedAvatar ? 'Changer d\'avatar' : 'Choisir un avatar' }}
+      {{ selectedAvatar ? "Changer d'avatar" : 'Choisir un avatar' }}
     </button>
 
     <!-- Modal de sélection d'avatar -->
@@ -25,34 +33,29 @@
           <h2>Choisissez votre avatar</h2>
           <button @click="closeModal" class="close-btn">&times;</button>
         </div>
-        
+
         <div class="modal-body">
           <p class="modal-description">Sélectionnez un avatar parmi notre collection</p>
-          
+
           <div class="avatar-grid">
-            <div 
-              v-for="(avatar, index) in avatars" 
-              :key="index" 
-              @click="selectAvatar(avatar)" 
-              :class="[
-                'avatar-option',
-                selectedAvatar?.url === avatar.url ? 'selected' : ''
-              ]"
+            <div
+              v-for="(avatar, index) in avatars"
+              :key="index"
+              @click="selectAvatar(avatar)"
+              :class="['avatar-option', selectedAvatar?.url === avatar.url ? 'selected' : '']"
             >
               <img :src="avatar.url" :alt="`Avatar ${avatar.style}`" class="avatar-option-img" />
               <div v-if="selectedAvatar?.url === avatar.url" class="selected-indicator">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                 </svg>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div class="modal-actions">
-          <button @click="closeModal" class="btn btn-secondary">
-            Annuler
-          </button>
+          <button @click="closeModal" class="btn btn-secondary">Annuler</button>
           <button @click="confirmSelection" class="btn btn-primary" :disabled="!selectedAvatar">
             Confirmer
           </button>
@@ -92,7 +95,7 @@ const avatarStyles = [
   'micah',
   'miniavs',
   'pixel-art',
-  'thumbs'
+  'thumbs',
 ]
 
 const avatars = ref<Avatar[]>([])
@@ -127,13 +130,13 @@ const generateAvatars = () => {
 
   const avatarsPerStyle = Math.ceil(maxAvatars / avatarStyles.length)
 
-  avatarStyles.forEach(style => {
+  avatarStyles.forEach((style) => {
     for (let i = 0; i < avatarsPerStyle && newAvatars.length < maxAvatars; i++) {
       const seed = generateRandomSeed()
       newAvatars.push({
         url: `https://api.dicebear.com/9.x/${style}/svg?seed=${seed}`,
         style: style,
-        seed: seed
+        seed: seed,
       })
     }
   })
@@ -150,22 +153,25 @@ onMounted(() => {
     selectedAvatar.value = {
       url: props.modelValue,
       style: 'unknown',
-      seed: 'unknown'
+      seed: 'unknown',
     }
   }
 })
 
-watch(() => props.modelValue, (newValue) => {
-  if (newValue && selectedAvatar.value?.url !== newValue) {
-    selectedAvatar.value = {
-      url: newValue,
-      style: 'unknown',
-      seed: 'unknown'
+watch(
+  () => props.modelValue,
+  (newValue) => {
+    if (newValue && selectedAvatar.value?.url !== newValue) {
+      selectedAvatar.value = {
+        url: newValue,
+        style: 'unknown',
+        seed: 'unknown',
+      }
+    } else if (!newValue) {
+      selectedAvatar.value = null
     }
-  } else if (!newValue) {
-    selectedAvatar.value = null
-  }
-})
+  },
+)
 </script>
 
 <style scoped>
@@ -247,7 +253,9 @@ watch(() => props.modelValue, (newValue) => {
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .avatar-modal {
@@ -395,22 +403,22 @@ watch(() => props.modelValue, (newValue) => {
     grid-template-columns: repeat(4, 1fr);
     gap: 0.5rem;
   }
-  
+
   .avatar-option {
     width: 50px;
     height: 50px;
   }
-  
+
   .modal-content {
     margin: 1rem;
     max-width: calc(100vw - 2rem);
   }
-  
+
   .modal-actions {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .btn {
     width: 100%;
   }
@@ -420,16 +428,16 @@ watch(() => props.modelValue, (newValue) => {
   .avatar-grid {
     grid-template-columns: repeat(3, 1fr);
   }
-  
+
   .avatar-option {
     width: 45px;
     height: 45px;
   }
-  
+
   .modal-header h2 {
     font-size: 1.25rem;
   }
-  
+
   .modal-description {
     font-size: 0.9rem;
   }

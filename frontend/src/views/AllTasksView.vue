@@ -93,9 +93,9 @@
                 {{ getPriorityLabel(task.priority) }}
               </div>
             </div>
-            
+
             <div class="task-description">{{ task.description }}</div>
-            
+
             <div class="task-meta">
               <div class="task-project">
                 <i class="icon">📁</i>
@@ -111,7 +111,11 @@
               <span class="status-badge" :class="getStatusClass(task.status)">
                 {{ getStatusLabel(task.status) }}
               </span>
-              <span v-if="task.dueDate" class="due-date" :class="{ 'overdue': isOverdue(task.dueDate) }">
+              <span
+                v-if="task.dueDate"
+                class="due-date"
+                :class="{ overdue: isOverdue(task.dueDate) }"
+              >
                 <i class="icon">📅</i>
                 {{ formatDate(task.dueDate) }}
               </span>
@@ -131,7 +135,11 @@
                 <i class="icon">👁️</i>
                 Voir
               </button>
-              <button v-if="canEditTask(task)" @click="editTask(task)" class="btn btn-sm btn-secondary">
+              <button
+                v-if="canEditTask(task)"
+                @click="editTask(task)"
+                class="btn btn-sm btn-secondary"
+              >
                 <i class="icon">✏️</i>
                 Modifier
               </button>
@@ -184,66 +192,74 @@ const error = ref('')
 const filters = ref({
   status: '',
   priority: '',
-  project: ''
+  project: '',
 })
 
 const filteredTasks = computed(() => {
   let filtered = tasks.value
 
   if (filters.value.status) {
-    filtered = filtered.filter(task => task.status === filters.value.status)
+    filtered = filtered.filter((task) => task.status === filters.value.status)
   }
 
   if (filters.value.priority) {
-    filtered = filtered.filter(task => task.priority === filters.value.priority)
+    filtered = filtered.filter((task) => task.priority === filters.value.priority)
   }
 
   if (filters.value.project) {
-    filtered = filtered.filter(task => task.project?.id === parseInt(filters.value.project))
+    filtered = filtered.filter((task) => task.project?.id === parseInt(filters.value.project))
   }
 
   return filtered
 })
 
 const totalTasks = computed(() => tasks.value.length)
-const completedTasks = computed(() => tasks.value.filter(t => t.status === 'completed').length)
-const inProgressTasks = computed(() => tasks.value.filter(t => t.status === 'in_progress').length)
+const completedTasks = computed(() => tasks.value.filter((t) => t.status === 'completed').length)
+const inProgressTasks = computed(() => tasks.value.filter((t) => t.status === 'in_progress').length)
 const overdueTasks = computed(() => {
   const now = new Date()
-  return tasks.value.filter(t => t.dueDate && new Date(t.dueDate) < now && t.status !== 'completed').length
+  return tasks.value.filter(
+    (t) => t.dueDate && new Date(t.dueDate) < now && t.status !== 'completed',
+  ).length
 })
 
 const loadTasks = async () => {
   try {
     loading.value = true
     error.value = ''
-    
+
     // TODO: Remplacer par des appels API réels
     // const tasksData = await taskService.getAllTasks()
-    
+
     // Données simulées
     tasks.value = [
       {
         id: 1,
-        title: 'Implémenter l\'authentification',
-        description: 'Créer le système d\'authentification JWT',
+        title: "Implémenter l'authentification",
+        description: "Créer le système d'authentification JWT",
         status: 'completed',
         priority: 'high',
         dueDate: '2024-01-15',
         project: { id: 1, name: 'Application Web' },
         assignee: { id: 1, firstName: 'Jean', lastName: 'Dupont' },
-        skills: [{ id: 1, name: 'JavaScript' }, { id: 2, name: 'Node.js' }]
+        skills: [
+          { id: 1, name: 'JavaScript' },
+          { id: 2, name: 'Node.js' },
+        ],
       },
       {
         id: 2,
-        title: 'Créer l\'interface utilisateur',
+        title: "Créer l'interface utilisateur",
         description: 'Développer les composants Vue.js',
         status: 'in_progress',
         priority: 'medium',
         dueDate: '2024-02-01',
         project: { id: 1, name: 'Application Web' },
         assignee: { id: 2, firstName: 'Marie', lastName: 'Martin' },
-        skills: [{ id: 3, name: 'Vue.js' }, { id: 4, name: 'CSS' }]
+        skills: [
+          { id: 3, name: 'Vue.js' },
+          { id: 4, name: 'CSS' },
+        ],
       },
       {
         id: 3,
@@ -254,10 +270,12 @@ const loadTasks = async () => {
         dueDate: '2024-02-15',
         project: { id: 2, name: 'API Backend' },
         assignee: { id: 3, firstName: 'Pierre', lastName: 'Durand' },
-        skills: [{ id: 5, name: 'Jest' }, { id: 6, name: 'Testing' }]
-      }
+        skills: [
+          { id: 5, name: 'Jest' },
+          { id: 6, name: 'Testing' },
+        ],
+      },
     ]
-    
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Erreur lors du chargement des tâches'
   } finally {
@@ -269,12 +287,12 @@ const loadProjects = async () => {
   try {
     // TODO: Remplacer par des appels API réels
     // const projectsData = await projectService.getProjects()
-    
+
     // Données simulées
     projects.value = [
       { id: 1, name: 'Application Web' },
       { id: 2, name: 'API Backend' },
-      { id: 3, name: 'Tests Unitaires' }
+      { id: 3, name: 'Tests Unitaires' },
     ]
   } catch (err) {
     console.error('Erreur lors du chargement des projets:', err)
@@ -306,40 +324,40 @@ const canEditTask = (task: Task): boolean => {
 
 const getPriorityLabel = (priority: string): string => {
   const priorityLabels: Record<string, string> = {
-    'low': 'Faible',
-    'medium': 'Moyenne',
-    'high': 'Élevée',
-    'urgent': 'Urgente'
+    low: 'Faible',
+    medium: 'Moyenne',
+    high: 'Élevée',
+    urgent: 'Urgente',
   }
   return priorityLabels[priority] || priority
 }
 
 const getPriorityClass = (priority: string): string => {
   const priorityClasses: Record<string, string> = {
-    'low': 'priority-low',
-    'medium': 'priority-medium',
-    'high': 'priority-high',
-    'urgent': 'priority-urgent'
+    low: 'priority-low',
+    medium: 'priority-medium',
+    high: 'priority-high',
+    urgent: 'priority-urgent',
   }
   return priorityClasses[priority] || 'priority-default'
 }
 
 const getStatusLabel = (status: string): string => {
   const statusLabels: Record<string, string> = {
-    'todo': 'À faire',
-    'in_progress': 'En cours',
-    'completed': 'Terminé',
-    'cancelled': 'Annulé'
+    todo: 'À faire',
+    in_progress: 'En cours',
+    completed: 'Terminé',
+    cancelled: 'Annulé',
   }
   return statusLabels[status] || status
 }
 
 const getStatusClass = (status: string): string => {
   const statusClasses: Record<string, string> = {
-    'todo': 'status-todo',
-    'in_progress': 'status-in-progress',
-    'completed': 'status-completed',
-    'cancelled': 'status-cancelled'
+    todo: 'status-todo',
+    in_progress: 'status-in-progress',
+    completed: 'status-completed',
+    cancelled: 'status-cancelled',
   }
   return statusClasses[status] || 'status-default'
 }
@@ -457,7 +475,9 @@ onMounted(() => {
   padding: 20px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   border: 1px solid #e1e8ed;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .task-card:hover {
@@ -666,8 +686,12 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error {
@@ -702,21 +726,21 @@ onMounted(() => {
     gap: 16px;
     align-items: stretch;
   }
-  
+
   .filters {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .filter-group {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .tasks-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .task-actions {
     flex-direction: column;
   }

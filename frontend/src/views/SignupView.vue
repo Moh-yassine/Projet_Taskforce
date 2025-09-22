@@ -77,7 +77,6 @@
             />
           </div>
 
-
           <div class="form-group">
             <label for="password">Mot de passe</label>
             <div class="password-input-container">
@@ -93,7 +92,7 @@
                 type="button"
                 @click="togglePassword"
                 class="password-toggle"
-                :class="{ 'active': showPassword }"
+                :class="{ active: showPassword }"
               >
                 <span v-if="showPassword">👁️</span>
                 <span v-else>👁️‍🗨️</span>
@@ -117,13 +116,13 @@
                 required
                 placeholder="Confirmez votre mot de passe"
                 class="form-input"
-                :class="{ 'error': !passwordsMatch && formData.confirmPassword }"
+                :class="{ error: !passwordsMatch && formData.confirmPassword }"
               />
               <button
                 type="button"
                 @click="toggleConfirmPassword"
                 class="password-toggle"
-                :class="{ 'active': showConfirmPassword }"
+                :class="{ active: showConfirmPassword }"
               >
                 <span v-if="showConfirmPassword">👁️</span>
                 <span v-else>👁️‍🗨️</span>
@@ -138,11 +137,15 @@
             <label class="checkbox-container">
               <input type="checkbox" v-model="formData.acceptTerms" required />
               <span class="checkmark"></span>
-              J'accepte les <a href="#" class="link-primary"> conditions d'utilisation</a> 
+              J'accepte les <a href="#" class="link-primary"> conditions d'utilisation</a>
             </label>
           </div>
 
-          <button type="submit" class="btn btn-primary btn-full" :disabled="isLoading || !passwordsMatch">
+          <button
+            type="submit"
+            class="btn btn-primary btn-full"
+            :disabled="isLoading || !passwordsMatch"
+          >
             <span v-if="isLoading" class="loading-spinner"></span>
             {{ isLoading ? 'Création du compte...' : 'Créer mon compte' }}
           </button>
@@ -150,7 +153,7 @@
 
         <div class="signup-footer">
           <p>
-            Déjà un compte ? 
+            Déjà un compte ?
             <router-link to="/login" class="link-primary">Se connecter</router-link>
           </p>
         </div>
@@ -187,7 +190,7 @@ const formData = reactive({
   company: '',
   password: '',
   confirmPassword: '',
-  acceptTerms: false
+  acceptTerms: false,
 })
 
 const showPassword = ref(false)
@@ -210,14 +213,14 @@ const passwordsMatch = computed(() => {
 
 const passwordStrength = computed(() => {
   if (!formData.password) return null
-  
+
   let score = 0
   if (formData.password.length >= 8) score++
   if (/[a-z]/.test(formData.password)) score++
   if (/[A-Z]/.test(formData.password)) score++
   if (/[0-9]/.test(formData.password)) score++
   if (/[^A-Za-z0-9]/.test(formData.password)) score++
-  
+
   return score
 })
 
@@ -240,36 +243,35 @@ const handleSignup = async () => {
     errorMessage.value = 'Les mots de passe ne correspondent pas'
     return
   }
-  
+
   if (!formData.acceptTerms) {
-    errorMessage.value = 'Veuillez accepter les conditions d\'utilisation'
+    errorMessage.value = "Veuillez accepter les conditions d'utilisation"
     return
   }
-  
+
   isLoading.value = true
   errorMessage.value = ''
   successMessage.value = ''
-  
+
   try {
     const response = await authService.register({
       firstName: formData.firstName,
       lastName: formData.lastName,
       email: formData.email,
       company: formData.company,
-      password: formData.password
+      password: formData.password,
     })
-    
+
     successMessage.value = response.message
-    
+
     setTimeout(() => {
       router.push('/login')
     }, 2000)
-    
   } catch (error) {
     if (error instanceof Error) {
       errorMessage.value = error.message
     } else {
-      errorMessage.value = 'Erreur inconnue lors de l\'inscription'
+      errorMessage.value = "Erreur inconnue lors de l'inscription"
     }
   } finally {
     isLoading.value = false
@@ -280,12 +282,12 @@ const handleSignup = async () => {
 <style scoped>
 :root {
   /* Palette Deep Sea */
-  --deep-dark: #0D1B2A;
-  --deep-navy: #1B263B;
-  --deep-blue: #415A77;
-  --deep-light: #778DA9;
-  --deep-pale: #E0E1DD;
-  
+  --deep-dark: #0d1b2a;
+  --deep-navy: #1b263b;
+  --deep-blue: #415a77;
+  --deep-light: #778da9;
+  --deep-pale: #e0e1dd;
+
   /* Couleurs principales */
   --primary-color: var(--deep-blue);
   --primary-hover: var(--deep-navy);
@@ -640,7 +642,7 @@ select.form-input {
   line-height: 1.4;
 }
 
-.checkbox-container input[type="checkbox"] {
+.checkbox-container input[type='checkbox'] {
   margin-right: 0.5rem;
   margin-top: 0.1rem;
   width: 16px;
@@ -723,34 +725,34 @@ select.form-input {
   .signup-section {
     padding: 6rem 1rem 2rem;
   }
-  
+
   .signup-card {
     padding: 2rem;
     margin: 0 1rem;
   }
-  
+
   .signup-header h2 {
     font-size: 1.75rem;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
     gap: 0;
   }
-  
+
   .header-content {
     padding: 0 1rem;
   }
-  
+
   .nav-buttons {
     gap: 1rem;
   }
-  
+
   .btn {
     padding: 0.8rem 1.5rem;
     font-size: 0.9rem;
   }
-  
+
   .footer-section h3 {
     font-size: 2rem;
   }
@@ -760,16 +762,16 @@ select.form-input {
   .signup-card {
     padding: 1.5rem;
   }
-  
+
   .signup-header h2 {
     font-size: 1.5rem;
   }
-  
+
   .btn-full {
     padding: 0.875rem;
     font-size: 1rem;
   }
-  
+
   .footer-section h3 {
     font-size: 1.8rem;
   }

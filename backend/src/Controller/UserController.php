@@ -21,8 +21,40 @@ class UserController extends AbstractController
         private TaskRepository $taskRepository
     ) {}
 
-    #[Route('/assignable', name: 'users_assignable', methods: ['GET'])]
+    #[Route('', name: 'users_list', methods: ['GET'])]
     #[IsGranted('ROLE_PROJECT_MANAGER')]
+    public function getAllUsers(): JsonResponse
+    {
+        try {
+            $users = $this->userRepository->findAll();
+            
+            $usersData = [];
+            foreach ($users as $user) {
+                $workload = $this->calculateUserWorkload($user);
+                
+                $usersData[] = [
+                    'id' => $user->getId(),
+                    'firstName' => $user->getFirstName(),
+                    'lastName' => $user->getLastName(),
+                    'email' => $user->getEmail(),
+                    'roles' => $user->getRoles(),
+                    'currentWeekHours' => $workload['currentWeekHours'],
+                    'maxWeekHours' => $workload['maxWeekHours'],
+                    'utilizationPercentage' => $workload['utilizationPercentage'],
+                    'remainingCapacity' => $workload['maxWeekHours'] - $workload['currentWeekHours'],
+                    'canReceiveTasks' => $workload['currentWeekHours'] < $workload['maxWeekHours'],
+                    'skills' => $this->getUserSkills($user)
+                ];
+            }
+
+            return new JsonResponse($usersData);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Erreur lors de la récupération des utilisateurs: ' . $e->getMessage()], 500);
+        }
+    }
+
+    #[Route('/assignable', name: 'users_assignable', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
     public function getAssignableUsers(): JsonResponse
     {
         // Récupérer les utilisateurs qui peuvent recevoir des tâches
@@ -143,7 +175,11 @@ class UserController extends AbstractController
             return new JsonResponse(['error' => 'Non authentifié'], 401);
         }
 
+        // Récupérer les tâches assignées via l'assignation simple uniquement
         $tasks = $this->taskRepository->findBy(['assignee' => $user]);
+        
+        // Supprimer les doublons
+        $tasks = array_unique($tasks, SORT_REGULAR);
         
         $taskDetails = [];
         foreach ($tasks as $task) {
@@ -172,6 +208,49 @@ class UserController extends AbstractController
         }
 
         return new JsonResponse($taskDetails);
+    }
+
+    #[Route('/{id}/role', name: 'user_update_role', methods: ['PUT'])]
+    #[IsGranted('ROLE_PROJECT_MANAGER')]
+    public function updateUserRole(int $id, Request $request): JsonResponse
+    {
+        try {
+            $user = $this->userRepository->find($id);
+            if (!$user) {
+                return new JsonResponse(['error' => 'Utilisateur non trouvé'], 404);
+            }
+
+            $data = json_decode($request->getContent(), true);
+            if (!isset($data['role'])) {
+                return new JsonResponse(['error' => 'Rôle manquant'], 400);
+            }
+
+            $newRole = $data['role'];
+            $validRoles = ['ROLE_COLLABORATOR', 'ROLE_MANAGER', 'ROLE_PROJECT_MANAGER'];
+            
+            if (!in_array($newRole, $validRoles)) {
+                return new JsonResponse(['error' => 'Rôle invalide'], 400);
+            }
+
+            // Mettre à jour le rôle de l'utilisateur
+            $user->setRoles([$newRole]);
+            $this->entityManager->persist($user);
+            $this->entityManager->flush();
+
+            return new JsonResponse([
+                'message' => 'Rôle mis à jour avec succès',
+                'user' => [
+                    'id' => $user->getId(),
+                    'firstName' => $user->getFirstName(),
+                    'lastName' => $user->getLastName(),
+                    'email' => $user->getEmail(),
+                    'roles' => $user->getRoles()
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Erreur lors de la mise à jour du rôle: ' . $e->getMessage()], 500);
+        }
     }
 
     private function calculateUserWorkload(User $user): array

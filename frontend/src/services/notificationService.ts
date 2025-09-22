@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8003/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
 
 export interface Notification {
   id: number
@@ -21,8 +21,8 @@ class NotificationService {
       const token = localStorage.getItem('authToken')
       const response = await axios.get(`${API_BASE_URL}/notifications/my-notifications`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       })
       return response.data
     } catch (error) {
@@ -37,11 +37,15 @@ class NotificationService {
   async markAsRead(notificationId: number): Promise<Notification> {
     try {
       const token = localStorage.getItem('authToken')
-      const response = await axios.put(`${API_BASE_URL}/notifications/${notificationId}/read`, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await axios.put(
+        `${API_BASE_URL}/notifications/${notificationId}/read`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
       return response.data
     } catch (error) {
       console.error('Erreur lors du marquage de la notification comme lue:', error)
@@ -55,11 +59,15 @@ class NotificationService {
   async markAsUnread(notificationId: number): Promise<Notification> {
     try {
       const token = localStorage.getItem('authToken')
-      const response = await axios.put(`${API_BASE_URL}/notifications/${notificationId}/unread`, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await axios.put(
+        `${API_BASE_URL}/notifications/${notificationId}/unread`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
       return response.data
     } catch (error) {
       console.error('Erreur lors du marquage de la notification comme non lue:', error)
@@ -73,14 +81,18 @@ class NotificationService {
   async toggleReadStatus(notificationId: number): Promise<Notification> {
     try {
       const token = localStorage.getItem('authToken')
-      const response = await axios.put(`${API_BASE_URL}/notifications/${notificationId}/toggle`, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await axios.put(
+        `${API_BASE_URL}/notifications/${notificationId}/toggle`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
       return response.data
     } catch (error) {
-      console.error('Erreur lors du basculement de l\'état de la notification:', error)
+      console.error("Erreur lors du basculement de l'état de la notification:", error)
       throw error
     }
   }
@@ -91,11 +103,15 @@ class NotificationService {
   async markAllAsRead(): Promise<void> {
     try {
       const token = localStorage.getItem('authToken')
-      await axios.patch(`${API_BASE_URL}/notifications/read-all`, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      await axios.patch(
+        `${API_BASE_URL}/notifications/read-all`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
     } catch (error) {
       console.error('Erreur lors du marquage de toutes les notifications comme lues:', error)
       throw error
@@ -110,8 +126,8 @@ class NotificationService {
       const token = localStorage.getItem('authToken')
       const response = await axios.post(`${API_BASE_URL}/notifications`, notification, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       })
       return response.data
     } catch (error) {
@@ -128,8 +144,8 @@ class NotificationService {
       const token = localStorage.getItem('authToken')
       await axios.delete(`${API_BASE_URL}/notifications/${notificationId}`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       })
     } catch (error) {
       console.error('Erreur lors de la suppression de la notification:', error)
@@ -143,11 +159,15 @@ class NotificationService {
   async checkWorkloadAlerts(): Promise<any> {
     try {
       const token = localStorage.getItem('authToken')
-      const response = await axios.post(`${API_BASE_URL}/alerts/check-workload`, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await axios.post(
+        `${API_BASE_URL}/alerts/check-workload`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
       return response.data
     } catch (error) {
       console.error('Erreur lors de la vérification des alertes de surcharge:', error)
@@ -161,11 +181,15 @@ class NotificationService {
   async checkDelayAlerts(): Promise<any> {
     try {
       const token = localStorage.getItem('authToken')
-      const response = await axios.post(`${API_BASE_URL}/alerts/check-delays`, {}, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
+      const response = await axios.post(
+        `${API_BASE_URL}/alerts/check-delays`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      )
       return response.data
     } catch (error) {
       console.error('Erreur lors de la vérification des alertes de retard:', error)

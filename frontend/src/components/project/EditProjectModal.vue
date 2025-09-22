@@ -64,9 +64,7 @@
         </div>
 
         <div class="form-actions">
-          <button type="button" @click="closeModal" class="btn btn-secondary">
-            Annuler
-          </button>
+          <button type="button" @click="closeModal" class="btn btn-secondary">Annuler</button>
           <button type="submit" class="btn btn-primary" :disabled="isLoading">
             <span v-if="isLoading" class="loading-spinner"></span>
             {{ isLoading ? 'Sauvegarde...' : 'Sauvegarder' }}
@@ -92,7 +90,7 @@ const formData = ref({
   description: '',
   startDate: '',
   endDate: '',
-  status: 'planning'
+  status: 'planning',
 })
 
 const isLoading = ref(false)
@@ -101,9 +99,13 @@ onMounted(() => {
   formData.value = {
     name: props.project.name || '',
     description: props.project.description || '',
-    startDate: props.project.startDate ? new Date(props.project.startDate).toISOString().split('T')[0] : '',
-    endDate: props.project.endDate ? new Date(props.project.endDate).toISOString().split('T')[0] : '',
-    status: props.project.status || 'planning'
+    startDate: props.project.startDate
+      ? new Date(props.project.startDate).toISOString().split('T')[0]
+      : '',
+    endDate: props.project.endDate
+      ? new Date(props.project.endDate).toISOString().split('T')[0]
+      : '',
+    status: props.project.status || 'planning',
   }
 })
 
@@ -117,9 +119,9 @@ const handleSubmit = async () => {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authService.getAuthToken()}`
+        Authorization: `Bearer ${authService.getAuthToken()}`,
       },
-      body: JSON.stringify(formData.value)
+      body: JSON.stringify(formData.value),
     })
 
     if (response.ok) {
@@ -303,15 +305,15 @@ textarea.form-input {
     margin: 1rem;
     max-height: calc(100vh - 2rem);
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .form-actions {
     flex-direction: column;
   }
-  
+
   .btn {
     width: 100%;
   }

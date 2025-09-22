@@ -61,7 +61,7 @@ class PermissionService
 
         // Le collaborateur peut modifier ses propres tâches
         if ($user->isCollaborator()) {
-            return $task->getAssignedUser() === $user;
+            return $task->getAssignee() === $user;
         }
 
         return false;
@@ -84,7 +84,7 @@ class PermissionService
 
         // Le collaborateur peut voir ses propres tâches
         if ($user->isCollaborator()) {
-            return $task->getAssignedUser() === $user;
+            return $task->getAssignee() === $user;
         }
 
         return false;

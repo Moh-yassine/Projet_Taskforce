@@ -7,8 +7,15 @@
           <h1 class="header-title" v-if="project">{{ project.name }}</h1>
         </div>
         <button @click="goBack" class="btn btn-primary">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
           </svg>
           Retour
         </button>
@@ -20,22 +27,29 @@
       <div class="description-header">
         <h3>Description du projet</h3>
         <button @click="toggleEditDescription" class="btn btn-edit">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
           </svg>
           {{ isEditingDescription ? 'Annuler' : 'Modifier' }}
         </button>
       </div>
-      
+
       <div v-if="!isEditingDescription" class="project-description">
         <p v-if="project.description">{{ project.description }}</p>
         <p v-else class="no-description">Aucune description disponible</p>
       </div>
-      
+
       <div v-else class="description-edit-form">
-        <textarea 
-          v-model="editedDescription" 
+        <textarea
+          v-model="editedDescription"
           class="description-textarea"
           placeholder="Entrez la description du projet..."
           rows="4"
@@ -91,15 +105,35 @@
                 <h4>{{ task.title }}</h4>
                 <div class="task-actions">
                   <button @click.stop="editTask(task)" class="action-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
                   </button>
                   <button @click.stop="deleteTask(task)" class="action-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
                       <polyline points="3,6 5,6 21,6"></polyline>
-                      <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                      <path
+                        d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"
+                      ></path>
                       <line x1="10" y1="11" x2="10" y2="17"></line>
                       <line x1="14" y1="11" x2="14" y2="17"></line>
                     </svg>
@@ -107,18 +141,14 @@
                 </div>
               </div>
               <p class="task-description">{{ task.description }}</p>
-              
+
               <!-- Compétences -->
               <div v-if="task.skills && task.skills.length > 0" class="task-skills">
-                <span 
-                  v-for="skill in task.skills" 
-                  :key="skill.id" 
-                  class="skill-tag"
-                >
+                <span v-for="skill in task.skills" :key="skill.id" class="skill-tag">
                   {{ skill.name }}
                 </span>
               </div>
-              
+
               <div class="task-footer">
                 <span class="priority" :class="task.priority">{{ task.priority }}</span>
                 <span v-if="task.assignee" class="assignee">
@@ -165,15 +195,35 @@
                 <h4>{{ task.title }}</h4>
                 <div class="task-actions">
                   <button @click.stop="editTask(task)" class="action-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
                   </button>
                   <button @click.stop="deleteTask(task)" class="action-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
                       <polyline points="3,6 5,6 21,6"></polyline>
-                      <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                      <path
+                        d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"
+                      ></path>
                       <line x1="10" y1="11" x2="10" y2="17"></line>
                       <line x1="14" y1="11" x2="14" y2="17"></line>
                     </svg>
@@ -181,18 +231,14 @@
                 </div>
               </div>
               <p class="task-description">{{ task.description }}</p>
-              
+
               <!-- Compétences -->
               <div v-if="task.skills && task.skills.length > 0" class="task-skills">
-                <span 
-                  v-for="skill in task.skills" 
-                  :key="skill.id" 
-                  class="skill-tag"
-                >
+                <span v-for="skill in task.skills" :key="skill.id" class="skill-tag">
                   {{ skill.name }}
                 </span>
               </div>
-              
+
               <div class="task-footer">
                 <span class="priority" :class="task.priority">{{ task.priority }}</span>
                 <span v-if="task.assignee" class="assignee">
@@ -239,15 +285,35 @@
                 <h4>{{ task.title }}</h4>
                 <div class="task-actions">
                   <button @click.stop="editTask(task)" class="action-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
                       <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                       <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                     </svg>
                   </button>
                   <button @click.stop="deleteTask(task)" class="action-btn">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
                       <polyline points="3,6 5,6 21,6"></polyline>
-                      <path d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+                      <path
+                        d="M19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"
+                      ></path>
                       <line x1="10" y1="11" x2="10" y2="17"></line>
                       <line x1="14" y1="11" x2="14" y2="17"></line>
                     </svg>
@@ -255,18 +321,14 @@
                 </div>
               </div>
               <p class="task-description">{{ task.description }}</p>
-              
+
               <!-- Compétences -->
               <div v-if="task.skills && task.skills.length > 0" class="task-skills">
-                <span 
-                  v-for="skill in task.skills" 
-                  :key="skill.id" 
-                  class="skill-tag"
-                >
+                <span v-for="skill in task.skills" :key="skill.id" class="skill-tag">
                   {{ skill.name }}
                 </span>
               </div>
-              
+
               <div class="task-footer">
                 <span class="priority" :class="task.priority">{{ task.priority }}</span>
                 <span v-if="task.assignee" class="assignee">
@@ -309,7 +371,10 @@
         </div>
         <div class="delete-modal-content">
           <div class="warning-icon">⚠️</div>
-          <p>Êtes-vous sûr de vouloir supprimer la tâche <strong>"{{ taskToDelete?.title }}"</strong> ?</p>
+          <p>
+            Êtes-vous sûr de vouloir supprimer la tâche
+            <strong>"{{ taskToDelete?.title }}"</strong> ?
+          </p>
           <p class="warning-text">Cette action est irréversible.</p>
         </div>
         <div class="delete-modal-actions">
@@ -357,8 +422,8 @@ const isSaving = ref(false)
 // Couleurs des colonnes
 const columnColors = ref({
   todo: '#f8f9fa',
-  in_progress: '#f8f9fa', 
-  completed: '#f8f9fa'
+  in_progress: '#f8f9fa',
+  completed: '#f8f9fa',
 })
 
 const availableColors = [
@@ -369,15 +434,15 @@ const availableColors = [
   { name: 'Orange clair', value: '#fff3e0' },
   { name: 'Rouge clair', value: '#ffebee' },
   { name: 'Violet clair', value: '#f3e5f5' },
-  { name: 'Gris clair', value: '#f5f5f5' }
+  { name: 'Gris clair', value: '#f5f5f5' },
 ]
 
 // Computed
 const tasksByStatus = computed(() => {
   return {
-    todo: tasks.value.filter(task => task.status === 'todo'),
-    in_progress: tasks.value.filter(task => task.status === 'in_progress'),
-    completed: tasks.value.filter(task => task.status === 'completed')
+    todo: tasks.value.filter((task) => task.status === 'todo'),
+    in_progress: tasks.value.filter((task) => task.status === 'in_progress'),
+    completed: tasks.value.filter((task) => task.status === 'completed'),
   }
 })
 
@@ -393,7 +458,7 @@ const loadProject = async () => {
 
 const loadTasks = async () => {
   if (!project.value?.id) return
-  
+
   isLoading.value = true
   try {
     tasks.value = await taskService.getTasksByProject(project.value.id)
@@ -409,7 +474,7 @@ const goBack = () => {
 }
 
 const openCreateTaskModal = (status?: string) => {
-  selectedTask.value = status ? { status } as Task : null
+  selectedTask.value = status ? ({ status } as Task) : null
   isEditMode.value = false
   showTaskModal.value = true
 }
@@ -439,11 +504,11 @@ const closeDeleteTaskModal = () => {
 
 const confirmDeleteTask = async () => {
   if (!taskToDelete.value) return
-  
+
   isDeletingTask.value = true
   try {
     await taskService.deleteTask(taskToDelete.value.id)
-    tasks.value = tasks.value.filter(t => t.id !== taskToDelete.value!.id)
+    tasks.value = tasks.value.filter((t) => t.id !== taskToDelete.value!.id)
     closeDeleteTaskModal()
     console.log('Tâche supprimée avec succès')
   } catch (error) {
@@ -464,7 +529,7 @@ const handleTaskSave = async (taskData: CreateTaskData) => {
   try {
     if (isEditMode.value && selectedTask.value) {
       const updatedTask = await taskService.updateTask(selectedTask.value.id, taskData)
-      const index = tasks.value.findIndex(t => t.id === selectedTask.value!.id)
+      const index = tasks.value.findIndex((t) => t.id === selectedTask.value!.id)
       if (index !== -1) {
         tasks.value[index] = updatedTask
       }
@@ -474,7 +539,7 @@ const handleTaskSave = async (taskData: CreateTaskData) => {
       }
       const newTask = await taskService.createTask({
         ...taskData,
-        projectId: project.value.id
+        projectId: project.value.id,
       })
       tasks.value.push(newTask)
     }
@@ -494,18 +559,18 @@ const closeAssignmentModal = () => {
   selectedTask.value = null
 }
 
-const handleTaskAssignment = async (assignmentData: { userId: number, reason: string }) => {
+const handleTaskAssignment = async (assignmentData: { userId: number; reason: string }) => {
   if (!selectedTask.value) return
-  
+
   try {
     const updatedTask = await taskService.assignTask(selectedTask.value.id, assignmentData)
-    const index = tasks.value.findIndex(t => t.id === selectedTask.value!.id)
+    const index = tasks.value.findIndex((t) => t.id === selectedTask.value!.id)
     if (index !== -1) {
       tasks.value[index] = updatedTask
     }
     closeAssignmentModal()
   } catch (error) {
-    console.error('Erreur lors de l\'assignation:', error)
+    console.error("Erreur lors de l'assignation:", error)
   }
 }
 
@@ -535,21 +600,21 @@ const cancelEditDescription = () => {
 
 const saveDescription = async () => {
   if (!project.value) return
-  
+
   isSaving.value = true
   try {
     // Appel au service pour mettre à jour le projet en base de données
-    const response = await projectService.updateProject(project.value.id, { 
-      description: editedDescription.value 
+    const response = await projectService.updateProject(project.value.id, {
+      description: editedDescription.value,
     })
-    
+
     // Mise à jour de l'objet projet local avec les données retournées
     project.value.description = response.project.description
     project.value.updatedAt = response.project.updatedAt
-    
+
     isEditingDescription.value = false
     editedDescription.value = ''
-    
+
     console.log('Description sauvegardée en base de données:', response.message)
   } catch (error) {
     console.error('Erreur lors de la sauvegarde:', error)
@@ -567,10 +632,10 @@ onMounted(async () => {
     router.push('/login')
     return
   }
-  
+
   await loadProject()
   await loadTasks()
-  
+
   // Fermer le menu de couleur en cliquant ailleurs
   document.addEventListener('click', (e) => {
     if (!(e.target as Element).closest('.column-menu')) {
@@ -622,12 +687,13 @@ onMounted(async () => {
 }
 
 .btn-edit {
-  background: var(--secondary-color);
-  color: var(--white);
+  background: #415a77;
+  color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   font-size: 0.9rem;
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -636,7 +702,7 @@ onMounted(async () => {
 }
 
 .btn-edit:hover {
-  background: var(--primary-color);
+  background: #1b263b;
   transform: translateY(-1px);
 }
 
@@ -746,18 +812,20 @@ onMounted(async () => {
 }
 
 .add-card-btn {
-  background: #007bff;
+  background: #415a77;
   color: white;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   cursor: pointer;
   font-size: 0.9rem;
-  transition: background 0.3s;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .add-card-btn:hover {
-  background: #0056b3;
+  background: #1b263b;
+  transform: translateY(-1px);
 }
 
 .column-menu {
@@ -765,18 +833,19 @@ onMounted(async () => {
 }
 
 .column-menu-btn {
-  background: #6c757d;
+  background: #778da9;
   color: white;
   border: none;
   padding: 0.5rem;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 1.2rem;
-  transition: background 0.3s;
+  transition: all 0.2s ease;
 }
 
 .column-menu-btn:hover {
-  background: #545b62;
+  background: #415a77;
+  transform: translateY(-1px);
 }
 
 .color-picker {
@@ -822,7 +891,9 @@ onMounted(async () => {
   margin-bottom: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 .task-card:hover {
@@ -854,21 +925,23 @@ onMounted(async () => {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0.25rem;
-  border-radius: 4px;
-  transition: background 0.2s;
-  color: #333;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  color: #415a77;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .action-btn:hover {
-  background: #f8f9fa;
+  background: rgba(65, 90, 119, 0.1);
+  color: #1b263b;
+  transform: translateY(-1px);
 }
 
 .action-btn svg {
-  color: #333;
+  color: inherit;
 }
 
 .task-description {
@@ -932,7 +1005,6 @@ onMounted(async () => {
   border-radius: 4px;
 }
 
-
 .loading {
   text-align: center;
   padding: 2rem;
@@ -945,15 +1017,15 @@ onMounted(async () => {
   .kanban-columns {
     flex-direction: column;
   }
-  
+
   .kanban-column {
     min-width: auto;
   }
-  
+
   .project-tasks-view {
     padding: 1rem;
   }
-  
+
   .header h1 {
     font-size: 2rem;
   }
@@ -1062,16 +1134,31 @@ onMounted(async () => {
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  background: #415a77;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #1b263b;
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #d1d5db;
+  background: #f8f9fa;
+  color: #415a77;
+  border: 1px solid #415a77;
 }
 
 .btn-secondary:hover {
-  background: #e5e7eb;
+  background: #415a77;
+  color: white;
+  transform: translateY(-1px);
 }
 
 .btn-danger {
@@ -1081,6 +1168,7 @@ onMounted(async () => {
 
 .btn-danger:hover:not(:disabled) {
   background: #b91c1c;
+  transform: translateY(-1px);
 }
 
 .btn-danger:disabled {
@@ -1115,17 +1203,17 @@ onMounted(async () => {
     width: 95%;
     margin: 1rem;
   }
-  
+
   .delete-modal-header,
   .delete-modal-content,
   .delete-modal-actions {
     padding: 1rem 1.5rem;
   }
-  
+
   .delete-modal-actions {
     flex-direction: column;
   }
-  
+
   .btn {
     width: 100%;
   }

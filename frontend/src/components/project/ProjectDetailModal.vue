@@ -45,11 +45,7 @@
               </button>
             </div>
             <div class="team-members">
-              <div 
-                v-for="member in project.teamMembers" 
-                :key="member.id"
-                class="member-card"
-              >
+              <div v-for="member in project.teamMembers" :key="member.id" class="member-card">
                 <div class="member-avatar">
                   {{ member.name.charAt(0) }}
                 </div>
@@ -57,10 +53,7 @@
                   <span class="member-name">{{ member.name }}</span>
                   <span class="member-email">{{ member.email }}</span>
                 </div>
-                <button 
-                  @click="removeTeamMember(member.id)"
-                  class="btn btn-small btn-danger"
-                >
+                <button @click="removeTeamMember(member.id)" class="btn btn-small btn-danger">
                   Retirer
                 </button>
               </div>
@@ -90,8 +83,8 @@
                 </div>
               </div>
               <div class="tasks-list">
-                <div 
-                  v-for="task in project.tasks" 
+                <div
+                  v-for="task in project.tasks"
                   :key="task.id"
                   class="task-item"
                   @click="openTask(task)"
@@ -116,37 +109,33 @@
       </div>
 
       <div class="modal-footer">
-        <button @click="closeModal" class="btn btn-secondary">
-          Fermer
-        </button>
-        <button @click="showEditModal = true" class="btn btn-primary">
-          Modifier le projet
-        </button>
+        <button @click="closeModal" class="btn btn-secondary">Fermer</button>
+        <button @click="showEditModal = true" class="btn btn-primary">Modifier le projet</button>
       </div>
     </div>
 
-    <AddTeamMemberModal 
+    <AddTeamMemberModal
       v-if="showAddMemberModal"
       :project-id="project.id"
       @close="showAddMemberModal = false"
       @member-added="handleMemberAdded"
     />
 
-    <CreateTaskModal 
+    <CreateTaskModal
       v-if="showCreateTaskModal"
       :projects="[project]"
       @close="showCreateTaskModal = false"
       @task-created="handleTaskCreated"
     />
 
-    <EditProjectModal 
+    <EditProjectModal
       v-if="showEditModal"
       :project="project"
       @close="showEditModal = false"
       @project-updated="handleProjectUpdated"
     />
 
-    <TaskDetailModal 
+    <TaskDetailModal
       v-if="selectedTask"
       :task="selectedTask"
       @close="selectedTask = null"
@@ -176,20 +165,20 @@ const selectedTask = ref(null)
 
 const getStatusLabel = (status: string) => {
   const labels = {
-    'planning': 'Planification',
-    'active': 'Actif',
+    planning: 'Planification',
+    active: 'Actif',
     'on-hold': 'En pause',
-    'completed': 'Terminé'
+    completed: 'Terminé',
   }
   return labels[status] || status
 }
 
 const getPriorityLabel = (priority: string) => {
   const labels = {
-    'low': 'Basse',
-    'medium': 'Moyenne',
-    'high': 'Haute',
-    'urgent': 'Urgente'
+    low: 'Basse',
+    medium: 'Moyenne',
+    high: 'Haute',
+    urgent: 'Urgente',
   }
   return labels[priority] || priority
 }
@@ -208,12 +197,15 @@ const removeTeamMember = async (memberId: number) => {
   }
 
   try {
-    const response = await fetch(`http://localhost:8000/api/projects/${props.project.id}/team-members/${memberId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${authService.getAuthToken()}`
-      }
-    })
+    const response = await fetch(
+      `http://localhost:8000/api/projects/${props.project.id}/team-members/${memberId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${authService.getAuthToken()}`,
+        },
+      },
+    )
 
     if (response.ok) {
       emit('project-updated')
@@ -591,19 +583,19 @@ const closeModal = () => {
     margin: 1rem;
     max-height: calc(100vh - 2rem);
   }
-  
+
   .info-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .task-stats {
     grid-template-columns: 1fr;
   }
-  
+
   .modal-footer {
     flex-direction: column;
   }
-  
+
   .btn {
     width: 100%;
   }

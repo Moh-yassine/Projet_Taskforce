@@ -56,7 +56,7 @@
                 type="button"
                 @click="togglePassword"
                 class="password-toggle"
-                :class="{ 'active': showPassword }"
+                :class="{ active: showPassword }"
               >
                 <span v-if="showPassword">👁️</span>
                 <span v-else>👁️‍🗨️</span>
@@ -81,7 +81,7 @@
 
         <div class="login-footer">
           <p>
-            Pas encore de compte ? 
+            Pas encore de compte ?
             <router-link to="/signup" class="link-primary">S'inscrire</router-link>
           </p>
         </div>
@@ -114,7 +114,7 @@ const router = useRouter()
 const formData = reactive({
   email: '',
   password: '',
-  rememberMe: false
+  rememberMe: false,
 })
 
 const showPassword = ref(false)
@@ -130,19 +130,18 @@ const handleLogin = async () => {
   isLoading.value = true
   errorMessage.value = ''
   successMessage.value = ''
-  
+
   try {
     const response = await authService.login({
       email: formData.email,
-      password: formData.password
+      password: formData.password,
     })
-    
+
     successMessage.value = response.message
-    
+
     setTimeout(() => {
       router.push('/dashboard')
     }, 1000)
-    
   } catch (error) {
     if (error instanceof Error) {
       errorMessage.value = error.message
@@ -158,12 +157,12 @@ const handleLogin = async () => {
 <style scoped>
 :root {
   /* Palette Deep Sea */
-  --deep-dark: #0D1B2A;
-  --deep-navy: #1B263B;
-  --deep-blue: #415A77;
-  --deep-light: #778DA9;
-  --deep-pale: #E0E1DD;
-  
+  --deep-dark: #0d1b2a;
+  --deep-navy: #1b263b;
+  --deep-blue: #415a77;
+  --deep-light: #778da9;
+  --deep-pale: #e0e1dd;
+
   /* Couleurs principales */
   --primary-color: var(--deep-blue);
   --primary-hover: var(--deep-navy);
@@ -449,7 +448,7 @@ const handleLogin = async () => {
   color: var(--text-secondary);
 }
 
-.checkbox-container input[type="checkbox"] {
+.checkbox-container input[type='checkbox'] {
   margin-right: 0.5rem;
   width: 16px;
   height: 16px;
@@ -542,35 +541,35 @@ const handleLogin = async () => {
   .login-section {
     padding: 6rem 1rem 2rem;
   }
-  
+
   .login-card {
     padding: 2rem;
     margin: 0 1rem;
   }
-  
+
   .login-header h2 {
     font-size: 1.75rem;
   }
-  
+
   .form-options {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
   }
-  
+
   .header-content {
     padding: 0 1rem;
   }
-  
+
   .nav-buttons {
     gap: 1rem;
   }
-  
+
   .btn {
     padding: 0.8rem 1.5rem;
     font-size: 0.9rem;
   }
-  
+
   .footer-section h3 {
     font-size: 2rem;
   }
@@ -580,16 +579,16 @@ const handleLogin = async () => {
   .login-card {
     padding: 1.5rem;
   }
-  
+
   .login-header h2 {
     font-size: 1.5rem;
   }
-  
+
   .btn-full {
     padding: 0.875rem;
     font-size: 1rem;
   }
-  
+
   .footer-section h3 {
     font-size: 1.8rem;
   }

@@ -13,25 +13,40 @@
     </div>
 
     <div v-else class="alerts-list">
-      <div 
-        v-for="alert in alerts" 
+      <div
+        v-for="alert in alerts"
         :key="alert.id"
         class="alert-item"
-        :class="[
-          'alert-' + alert.severity,
-          { 'alert-unread': !alert.isRead }
-        ]"
+        :class="['alert-' + alert.severity, { 'alert-unread': !alert.isRead }]"
         @click="markAsRead(alert)"
       >
         <div class="alert-icon">
-          <svg v-if="alert.type === 'overload'" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          <svg
+            v-if="alert.type === 'overload'"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+            />
           </svg>
-          <svg v-else-if="alert.type === 'delay'" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+          <svg
+            v-else-if="alert.type === 'delay'"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path
+              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"
+            />
           </svg>
           <svg v-else width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            <path
+              d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+            />
           </svg>
         </div>
 
@@ -44,14 +59,14 @@
         </div>
 
         <div class="alert-actions">
-          <button 
-            v-if="!alert.isRead" 
+          <button
+            v-if="!alert.isRead"
             @click.stop="markAsRead(alert)"
             class="mark-read-btn"
             title="Marquer comme lu"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
             </svg>
           </button>
         </div>
@@ -59,12 +74,8 @@
     </div>
 
     <div v-if="alerts.length > 0" class="alerts-footer">
-      <button @click="markAllAsRead" class="btn btn-secondary">
-        Tout marquer comme lu
-      </button>
-      <button @click="refreshAlerts" class="btn btn-primary">
-        Actualiser
-      </button>
+      <button @click="markAllAsRead" class="btn btn-secondary">Tout marquer comme lu</button>
+      <button @click="refreshAlerts" class="btn btn-primary">Actualiser</button>
     </div>
   </div>
 </template>
@@ -94,17 +105,17 @@ const markAsRead = async (alert: WorkloadAlert) => {
     await workloadService.markAlertAsRead(alert.id)
     alert.isRead = true
   } catch (error) {
-    console.error('Erreur lors de la mise à jour de l\'alerte:', error)
+    console.error("Erreur lors de la mise à jour de l'alerte:", error)
   }
 }
 
 // Marquer toutes les alertes comme lues
 const markAllAsRead = async () => {
   try {
-    const unreadAlerts = alerts.value.filter(alert => !alert.isRead)
-    await Promise.all(unreadAlerts.map(alert => workloadService.markAlertAsRead(alert.id)))
-    
-    alerts.value.forEach(alert => {
+    const unreadAlerts = alerts.value.filter((alert) => !alert.isRead)
+    await Promise.all(unreadAlerts.map((alert) => workloadService.markAlertAsRead(alert.id)))
+
+    alerts.value.forEach((alert) => {
       alert.isRead = true
     })
   } catch (error) {
@@ -135,8 +146,8 @@ const formatTime = (dateString: string) => {
   const date = new Date(dateString)
   const now = new Date()
   const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
-  
-  if (diffInMinutes < 1) return 'À l\'instant'
+
+  if (diffInMinutes < 1) return "À l'instant"
   if (diffInMinutes < 60) return `Il y a ${diffInMinutes}min`
   if (diffInMinutes < 1440) return `Il y a ${Math.floor(diffInMinutes / 60)}h`
   return `Il y a ${Math.floor(diffInMinutes / 1440)}j`
@@ -148,7 +159,7 @@ let refreshInterval: NodeJS.Timeout | null = null
 onMounted(() => {
   loadAlerts()
   checkTaskDelays()
-  
+
   // Vérifier les retards toutes les 5 minutes
   refreshInterval = setInterval(checkTaskDelays, 5 * 60 * 1000)
 })
@@ -197,8 +208,13 @@ onUnmounted(() => {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .no-alerts {
@@ -365,16 +381,16 @@ onUnmounted(() => {
   .alerts-header {
     padding: 1rem;
   }
-  
+
   .alert-item {
     padding: 1rem;
   }
-  
+
   .alerts-footer {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .btn {
     width: 100%;
   }

@@ -18,9 +18,7 @@
               {{ board.name.charAt(0).toUpperCase() }}
             </div>
             <div class="board-menu" @click.stop>
-              <button class="board-menu-btn" @click="toggleBoardMenu(board.id)">
-                ⋯
-              </button>
+              <button class="board-menu-btn" @click="toggleBoardMenu(board.id)">⋯</button>
               <div v-if="activeBoardMenu === board.id" class="board-menu-dropdown">
                 <button @click="editBoard(board)">Modifier</button>
                 <button @click="duplicateBoard(board)">Dupliquer</button>
@@ -50,19 +48,19 @@
         <form @submit.prevent="createBoard" class="modal-form">
           <div class="form-group">
             <label for="boardName">Nom du tableau</label>
-            <input 
+            <input
               id="boardName"
-              v-model="newBoard.name" 
-              type="text" 
+              v-model="newBoard.name"
+              type="text"
               placeholder="Ex: Projet Marketing Q4"
               required
             />
           </div>
           <div class="form-group">
             <label for="boardDescription">Description (optionnel)</label>
-            <textarea 
+            <textarea
               id="boardDescription"
-              v-model="newBoard.description" 
+              v-model="newBoard.description"
               placeholder="Décrivez le but de ce tableau..."
               rows="3"
             ></textarea>
@@ -70,8 +68,8 @@
           <div class="form-group">
             <label for="boardColor">Couleur</label>
             <div class="color-picker">
-              <div 
-                v-for="color in boardColors" 
+              <div
+                v-for="color in boardColors"
                 :key="color"
                 class="color-option"
                 :class="{ active: newBoard.color === color }"
@@ -92,9 +90,7 @@
             <button type="button" class="btn btn-secondary" @click="closeCreateBoardModal">
               Annuler
             </button>
-            <button type="submit" class="btn btn-primary">
-              Créer le tableau
-            </button>
+            <button type="submit" class="btn btn-primary">Créer le tableau</button>
           </div>
         </form>
       </div>
@@ -110,26 +106,21 @@
         <form @submit.prevent="updateBoard" class="modal-form">
           <div class="form-group">
             <label for="editBoardName">Nom du tableau</label>
-            <input 
-              id="editBoardName"
-              v-model="editingBoard.name" 
-              type="text" 
-              required
-            />
+            <input id="editBoardName" v-model="editingBoard.name" type="text" required />
           </div>
           <div class="form-group">
             <label for="editBoardDescription">Description</label>
-            <textarea 
+            <textarea
               id="editBoardDescription"
-              v-model="editingBoard.description" 
+              v-model="editingBoard.description"
               rows="3"
             ></textarea>
           </div>
           <div class="form-group">
             <label for="editBoardColor">Couleur</label>
             <div class="color-picker">
-              <div 
-                v-for="color in boardColors" 
+              <div
+                v-for="color in boardColors"
                 :key="color"
                 class="color-option"
                 :class="{ active: editingBoard.color === color }"
@@ -150,9 +141,7 @@
             <button type="button" class="btn btn-secondary" @click="closeEditBoardModal">
               Annuler
             </button>
-            <button type="submit" class="btn btn-primary">
-              Enregistrer
-            </button>
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
           </div>
         </form>
       </div>
@@ -177,12 +166,18 @@ const newBoard = ref({
   name: '',
   description: '',
   color: '#0079bf',
-  visibility: 'private'
+  visibility: 'private',
 })
 
 const boardColors = [
-  '#0079bf', '#d29034', '#519839', '#b04632', 
-  '#89609e', '#cd5a91', '#4bbf6b', '#29cce5'
+  '#0079bf',
+  '#d29034',
+  '#519839',
+  '#b04632',
+  '#89609e',
+  '#cd5a91',
+  '#4bbf6b',
+  '#29cce5',
 ]
 
 onMounted(async () => {
@@ -198,17 +193,17 @@ const loadBoards = async () => {
     loading.value = true
     const response = await fetch('http://localhost:8000/api/boards', {
       headers: {
-        'Authorization': `Bearer ${authService.getToken()}`,
-        'Content-Type': 'application/json'
-      }
+        Authorization: `Bearer ${authService.getToken()}`,
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       const data = await response.json()
-      boards.value = data.map(board => ({
+      boards.value = data.map((board) => ({
         ...board,
         listsCount: board.lists?.length || 0,
-        cardsCount: board.lists?.reduce((total, list) => total + (list.cards?.length || 0), 0) || 0
+        cardsCount: board.lists?.reduce((total, list) => total + (list.cards?.length || 0), 0) || 0,
       }))
     }
   } catch (error) {
@@ -223,10 +218,10 @@ const createBoard = async () => {
     const response = await fetch('http://localhost:8000/api/boards', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${authService.getToken()}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${authService.getToken()}`,
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(newBoard.value)
+      body: JSON.stringify(newBoard.value),
     })
 
     if (response.ok) {
@@ -244,10 +239,10 @@ const updateBoard = async () => {
     const response = await fetch(`http://localhost:8000/api/boards/${editingBoard.value.id}`, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${authService.getToken()}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${authService.getToken()}`,
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(editingBoard.value)
+      body: JSON.stringify(editingBoard.value),
     })
 
     if (response.ok) {
@@ -266,8 +261,8 @@ const deleteBoard = async (boardId) => {
     const response = await fetch(`http://localhost:8000/api/boards/${boardId}`, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${authService.getToken()}`
-      }
+        Authorization: `Bearer ${authService.getToken()}`,
+      },
     })
 
     if (response.ok) {
@@ -283,7 +278,7 @@ const duplicateBoard = (board) => {
     name: `${board.name} (copie)`,
     description: board.description,
     color: board.color,
-    visibility: board.visibility
+    visibility: board.visibility,
   }
   showCreateBoardModal.value = true
 }
@@ -316,7 +311,7 @@ const resetNewBoard = () => {
     name: '',
     description: '',
     color: '#0079bf',
-    visibility: 'private'
+    visibility: 'private',
   }
 }
 </script>
@@ -649,11 +644,11 @@ const resetNewBoard = () => {
     gap: 1rem;
     text-align: center;
   }
-  
+
   .boards-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .form-actions {
     flex-direction: column;
   }

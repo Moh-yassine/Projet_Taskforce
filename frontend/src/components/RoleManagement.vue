@@ -8,9 +8,7 @@
     <div class="users-list">
       <div v-for="user in users" :key="user.id" class="user-card">
         <div class="user-info">
-          <div class="user-avatar">
-            {{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}
-          </div>
+          <div class="user-avatar">{{ user.firstName.charAt(0) }}{{ user.lastName.charAt(0) }}</div>
           <div class="user-details">
             <h3>{{ user.firstName }} {{ user.lastName }}</h3>
             <p class="user-email">{{ user.email }}</p>
@@ -28,7 +26,7 @@
 
           <div class="role-selector">
             <label for="role-select">Changer le rôle :</label>
-            <select 
+            <select
               :id="`role-select-${user.id}`"
               :value="user.permissions.primaryRole"
               @change="updateUserRole(user.id, $event.target.value)"
@@ -47,7 +45,11 @@
                 <span v-if="typeof value === 'boolean'" class="permission-name">
                   {{ getPermissionLabel(key) }}:
                 </span>
-                <span v-if="typeof value === 'boolean'" class="permission-value" :class="{ 'granted': value, 'denied': !value }">
+                <span
+                  v-if="typeof value === 'boolean'"
+                  class="permission-value"
+                  :class="{ granted: value, denied: !value }"
+                >
                   {{ value ? '✓' : '✗' }}
                 </span>
               </div>
@@ -101,15 +103,15 @@ const updateUserRole = async (userId: number, newRole: string) => {
   try {
     loading.value = true
     error.value = ''
-    
+
     const updatedUser = await roleService.assignRole(userId, newRole)
-    
+
     // Mettre à jour l'utilisateur dans la liste
-    const userIndex = users.value.findIndex(u => u.id === userId)
+    const userIndex = users.value.findIndex((u) => u.id === userId)
     if (userIndex !== -1) {
       users.value[userIndex] = updatedUser.user
     }
-    
+
     // Afficher un message de succès
     console.log(`Rôle mis à jour pour l'utilisateur ${userId}`)
   } catch (err) {
@@ -125,25 +127,25 @@ const getRoleLabel = (role: string): string => {
 
 const getRoleClass = (role: string): string => {
   const roleClasses: Record<string, string> = {
-    'ROLE_PROJECT_MANAGER': 'role-project-manager',
-    'ROLE_MANAGER': 'role-manager',
-    'ROLE_COLLABORATOR': 'role-collaborator',
-    'ROLE_USER': 'role-user'
+    ROLE_PROJECT_MANAGER: 'role-project-manager',
+    ROLE_MANAGER: 'role-manager',
+    ROLE_COLLABORATOR: 'role-collaborator',
+    ROLE_USER: 'role-user',
   }
   return roleClasses[role] || 'role-default'
 }
 
 const getPermissionLabel = (key: string): string => {
   const permissionLabels: Record<string, string> = {
-    'canManageProjects': 'Gérer les projets',
-    'canSuperviseTasks': 'Superviser les tâches',
-    'canAssignTasks': 'Assigner les tâches',
-    'canViewAllTasks': 'Voir toutes les tâches',
-    'canViewReports': 'Voir les rapports',
-    'canManageUsers': 'Gérer les utilisateurs',
-    'canManageSkills': 'Gérer les compétences',
-    'canViewNotifications': 'Voir les notifications',
-    'canManageNotifications': 'Gérer les notifications'
+    canManageProjects: 'Gérer les projets',
+    canSuperviseTasks: 'Superviser les tâches',
+    canAssignTasks: 'Assigner les tâches',
+    canViewAllTasks: 'Voir toutes les tâches',
+    canViewReports: 'Voir les rapports',
+    canManageUsers: 'Gérer les utilisateurs',
+    canManageSkills: 'Gérer les compétences',
+    canViewNotifications: 'Voir les notifications',
+    canManageNotifications: 'Gérer les notifications',
   }
   return permissionLabels[key] || key
 }
@@ -355,8 +357,12 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error {
@@ -373,12 +379,12 @@ onMounted(() => {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .user-avatar {
     margin-right: 0;
     margin-bottom: 12px;
   }
-  
+
   .permissions-grid {
     grid-template-columns: 1fr;
   }

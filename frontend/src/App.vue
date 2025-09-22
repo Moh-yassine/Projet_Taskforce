@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
+import PerformanceOptimizer from './components/PerformanceOptimizer.vue'
 </script>
 
 <template>
   <div id="app">
+    <PerformanceOptimizer
+      :enable-resource-hints="true"
+      :enable-lazy-loading="true"
+      :enable-image-optimization="true"
+    />
     <RouterView />
   </div>
 </template>
@@ -51,3 +57,5 @@ main.with-navigation {
   text-align: center;
 }
 </style>
+
+

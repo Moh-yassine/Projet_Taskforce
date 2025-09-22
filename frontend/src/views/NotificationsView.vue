@@ -40,8 +40,12 @@
         </div>
 
         <div v-else class="notifications-grid">
-          <div v-for="notification in notifications" :key="notification.id" 
-               class="notification-card" :class="{ 'unread': !notification.isRead }">
+          <div
+            v-for="notification in notifications"
+            :key="notification.id"
+            class="notification-card"
+            :class="{ unread: !notification.isRead }"
+          >
             <div class="notification-header">
               <div class="notification-type" :class="getTypeClass(notification.type)">
                 <i class="icon">{{ getTypeIcon(notification.type) }}</i>
@@ -51,12 +55,14 @@
                 <span class="notification-date">{{ formatDate(notification.createdAt) }}</span>
               </div>
               <div class="notification-actions">
-                <button v-if="!notification.isRead" @click="markAsRead(notification.id)" 
-                        class="btn btn-sm btn-primary">
+                <button
+                  v-if="!notification.isRead"
+                  @click="markAsRead(notification.id)"
+                  class="btn btn-sm btn-primary"
+                >
                   <i class="icon">✓</i>
                 </button>
-                <button @click="deleteNotification(notification.id)" 
-                        class="btn btn-sm btn-danger">
+                <button @click="deleteNotification(notification.id)" class="btn btn-sm btn-danger">
                   <i class="icon">🗑️</i>
                 </button>
               </div>
@@ -105,10 +111,9 @@ const loadNotifications = async () => {
   try {
     loading.value = true
     error.value = ''
-    
+
     const notificationsData = await notificationService.getNotifications()
     notifications.value = notificationsData
-    
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Erreur lors du chargement des notifications'
   } finally {
@@ -119,8 +124,8 @@ const loadNotifications = async () => {
 const markAsRead = async (notificationId: number) => {
   try {
     await notificationService.markAsRead(notificationId)
-    
-    const notification = notifications.value.find(n => n.id === notificationId)
+
+    const notification = notifications.value.find((n) => n.id === notificationId)
     if (notification) {
       notification.isRead = true
     }
@@ -132,8 +137,8 @@ const markAsRead = async (notificationId: number) => {
 const markAllAsRead = async () => {
   try {
     await notificationService.markAllAsRead()
-    
-    notifications.value.forEach(notification => {
+
+    notifications.value.forEach((notification) => {
       notification.isRead = true
     })
   } catch (err) {
@@ -144,8 +149,8 @@ const markAllAsRead = async () => {
 const deleteNotification = async (notificationId: number) => {
   try {
     await notificationService.deleteNotification(notificationId)
-    
-    notifications.value = notifications.value.filter(n => n.id !== notificationId)
+
+    notifications.value = notifications.value.filter((n) => n.id !== notificationId)
   } catch (err) {
     console.error('Erreur lors de la suppression:', err)
   }
@@ -157,7 +162,7 @@ const clearAllNotifications = async () => {
     for (const notification of notifications.value) {
       await notificationService.deleteNotification(notification.id)
     }
-    
+
     notifications.value = []
   } catch (err) {
     console.error('Erreur lors de la suppression de toutes les notifications:', err)
@@ -166,32 +171,32 @@ const clearAllNotifications = async () => {
 
 const getTypeIcon = (type: string): string => {
   const typeIcons: Record<string, string> = {
-    'task_assigned': '📋',
-    'task_completed': '✅',
-    'task_updated': '📝',
-    'project_updated': '📁',
-    'user_joined': '👤',
-    'deadline_approaching': '⏰',
-    'system': '⚙️',
-    'workload_alert': '🚨',
-    'delay_alert': '⏰',
-    'alert': '🚨'
+    task_assigned: '📋',
+    task_completed: '✅',
+    task_updated: '📝',
+    project_updated: '📁',
+    user_joined: '👤',
+    deadline_approaching: '⏰',
+    system: '⚙️',
+    workload_alert: '🚨',
+    delay_alert: '⏰',
+    alert: '🚨',
   }
   return typeIcons[type] || '🔔'
 }
 
 const getTypeClass = (type: string): string => {
   const typeClasses: Record<string, string> = {
-    'task_assigned': 'type-task',
-    'task_completed': 'type-success',
-    'task_updated': 'type-info',
-    'project_updated': 'type-project',
-    'user_joined': 'type-user',
-    'deadline_approaching': 'type-warning',
-    'system': 'type-system',
-    'workload_alert': 'type-danger',
-    'delay_alert': 'type-warning',
-    'alert': 'type-danger'
+    task_assigned: 'type-task',
+    task_completed: 'type-success',
+    task_updated: 'type-info',
+    project_updated: 'type-project',
+    user_joined: 'type-user',
+    deadline_approaching: 'type-warning',
+    system: 'type-system',
+    workload_alert: 'type-danger',
+    delay_alert: 'type-warning',
+    alert: 'type-danger',
   }
   return typeClasses[type] || 'type-default'
 }
@@ -202,7 +207,7 @@ const formatDate = (dateString: string): string => {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -458,8 +463,12 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error {
@@ -492,12 +501,12 @@ onMounted(() => {
   .notification-controls {
     flex-direction: column;
   }
-  
+
   .notification-header {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .notification-actions {
     align-self: flex-end;
   }

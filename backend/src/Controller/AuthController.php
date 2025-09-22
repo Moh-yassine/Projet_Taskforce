@@ -43,6 +43,20 @@ class AuthController extends AbstractController
             }
         }
 
+        // Validation de l'email
+        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
+            return $this->json(['message' => 'L\'email doit être valide'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Validation du mot de passe
+        if (strlen($data['password']) < 8) {
+            return $this->json(['message' => 'Le mot de passe doit contenir au moins 8 caractères'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/', $data['password'])) {
+            return $this->json(['message' => 'Le mot de passe doit contenir au moins une minuscule, une majuscule, un chiffre et un caractère spécial'], Response::HTTP_BAD_REQUEST);
+        }
+
         if ($this->userRepository->emailExists($data['email'])) {
             return $this->json(['message' => 'Cet email est déjà utilisé'], Response::HTTP_CONFLICT);
         }
@@ -69,8 +83,12 @@ class AuthController extends AbstractController
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
+        // Générer le token JWT après l'inscription
+        $token = $this->jwtManager->create($user);
+
         return $this->json([
             'message' => 'Utilisateur créé avec succès',
+            'token' => $token,
             'user' => [
                 'id' => $user->getId(),
                 'email' => $user->getEmail(),
@@ -78,6 +96,7 @@ class AuthController extends AbstractController
                 'lastName' => $user->getLastName(),
                 'company' => $user->getCompany(),
                 'roles' => $user->getRoles(),
+                'permissions' => $this->permissionService->getUserPermissions($user),
                 'createdAt' => $user->getCreatedAt()->format('c'),
                 'updatedAt' => $user->getUpdatedAt()->format('c')
             ]
@@ -141,3 +160,5 @@ class AuthController extends AbstractController
         ]);
     }
 }
+
+

@@ -32,7 +32,7 @@ export function useNotificationCard() {
       message,
       buttonText: 'OK',
       autoClose: false,
-      ...options
+      ...options,
     })
   }
 
@@ -43,7 +43,7 @@ export function useNotificationCard() {
       message,
       buttonText: 'OK',
       autoClose: false,
-      ...options
+      ...options,
     })
   }
 
@@ -54,7 +54,7 @@ export function useNotificationCard() {
       message,
       buttonText: 'OK',
       autoClose: false,
-      ...options
+      ...options,
     })
   }
 
@@ -65,7 +65,7 @@ export function useNotificationCard() {
       message,
       buttonText: 'OK',
       autoClose: false,
-      ...options
+      ...options,
     })
   }
 
@@ -77,6 +77,6 @@ export function useNotificationCard() {
     success,
     error,
     warning,
-    info
+    info,
   }
 }

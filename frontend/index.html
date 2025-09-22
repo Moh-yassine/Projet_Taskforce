@@ -1,12 +1,119 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="fr">
   <head>
     <meta charset="UTF-8">
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vite App</title>
+    
+    <!-- SEO Meta Tags -->
+    <title>TaskForce - Gestion de Projets et Équipes</title>
+    <meta name="description" content="TaskForce est une plateforme moderne de gestion de projets et d'équipes. Organisez vos tâches, gérez vos équipes et suivez vos projets en temps réel.">
+    <meta name="keywords" content="gestion de projets, équipes, tâches, collaboration, productivité, management">
+    <meta name="author" content="TaskForce Team">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://taskforce.app/">
+    <meta property="og:title" content="TaskForce - Gestion de Projets et Équipes">
+    <meta property="og:description" content="Plateforme moderne de gestion de projets et d'équipes. Organisez vos tâches et collaborez efficacement.">
+    <meta property="og:image" content="https://taskforce.app/og-image.jpg">
+    <meta property="og:site_name" content="TaskForce">
+    <meta property="og:locale" content="fr_FR">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://taskforce.app/">
+    <meta property="twitter:title" content="TaskForce - Gestion de Projets et Équipes">
+    <meta property="twitter:description" content="Plateforme moderne de gestion de projets et d'équipes. Organisez vos tâches et collaborez efficacement.">
+    <meta property="twitter:image" content="https://taskforce.app/og-image.jpg">
+    
+    <!-- Additional SEO -->
+    <meta name="theme-color" content="#1e40af">
+    <meta name="msapplication-TileColor" content="#1e40af">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="TaskForce">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://taskforce.app/">
+    
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-M292NPQBQB"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-M292NPQBQB', {
+        page_title: document.title,
+        page_location: window.location.href,
+        send_page_view: true,
+        // Configuration pour le respect de la vie privée
+        anonymize_ip: true,
+        allow_google_signals: false,
+        allow_ad_personalization_signals: false
+      });
+    </script>
+
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-KDFJSSTN');</script>
+
+    <!-- Performance Monitoring -->
+    <script>
+      // Core Web Vitals Monitoring - will be handled by analyticsService
+      // Basic performance tracking fallback
+      window.addEventListener('load', function() {
+        if (typeof gtag !== 'undefined') {
+          const navigation = performance.getEntriesByType('navigation')[0];
+          if (navigation) {
+            const loadTime = navigation.loadEventEnd - navigation.fetchStart;
+            gtag('event', 'page_load_time', {
+              value: Math.round(loadTime),
+              event_category: 'performance'
+            });
+          }
+        }
+      });
+    </script>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "TaskForce",
+      "description": "Plateforme moderne de gestion de projets et d'équipes. Organisez vos tâches, gérez vos équipes et suivez vos projets en temps réel.",
+      "url": "https://taskforce.app",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "creator": {
+        "@type": "Organization",
+        "name": "TaskForce Team"
+      },
+      "keywords": ["gestion de projets", "équipes", "tâches", "collaboration", "productivité", "management"],
+      "inLanguage": "fr-FR"
+    }
+    </script>
   </head>
   <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KDFJSSTN"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

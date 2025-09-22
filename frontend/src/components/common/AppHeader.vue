@@ -7,9 +7,23 @@
       </div>
       <div class="header-actions">
         <slot name="actions">
-          <button v-if="showBackButton" @click="goBack" class="btn btn-secondary">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
+          <button
+            v-if="showBackButton"
+            @click="goBack"
+            class="btn btn-secondary"
+            :aria-label="`${backButtonText} vers ${backRoute}`"
+            data-testid="back-button"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             {{ backButtonText }}
           </button>
@@ -33,7 +47,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   showBackButton: false,
   backButtonText: 'Retour',
-  backRoute: '/dashboard'
+  backRoute: '/dashboard',
 })
 
 const router = useRouter()

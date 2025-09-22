@@ -68,6 +68,7 @@ class Task
     #[Groups(['task:read', 'task:write'])]
     private ?User $assignee = null;
 
+
     #[ORM\ManyToMany(targetEntity: Skill::class, inversedBy: 'tasks')]
     #[Groups(['task:read', 'task:write'])]
     private Collection $skills;
@@ -171,6 +172,7 @@ class Task
         $this->assignee = $assignee;
         return $this;
     }
+
 
     /**
      * @return Collection<int, Skill>

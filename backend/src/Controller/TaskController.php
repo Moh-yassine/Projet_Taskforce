@@ -8,8 +8,8 @@ use App\Repository\TaskRepository;
 use App\Repository\ProjectRepository;
 use App\Repository\UserRepository;
 use App\Repository\SkillRepository;
-use App\Service\TaskAssignmentService;
 use App\Service\PermissionService;
+use App\Service\AlertService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -29,8 +29,8 @@ class TaskController extends AbstractController
         private ProjectRepository $projectRepository,
         private UserRepository $userRepository,
         private SkillRepository $skillRepository,
-        private TaskAssignmentService $taskAssignmentService,
-        private PermissionService $permissionService
+        private PermissionService $permissionService,
+        private AlertService $alertService
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -117,6 +117,22 @@ class TaskController extends AbstractController
                 }
             }
             
+            // Assignations multiples
+            if (isset($taskData['assignments']) && is_array($taskData['assignments'])) {
+                foreach ($taskData['assignments'] as $assignmentData) {
+                    if (isset($assignmentData['userId']) && isset($assignmentData['role'])) {
+                        $user = $this->userRepository->find($assignmentData['userId']);
+                        if ($user) {
+                            $assignment = new \App\Entity\TaskAssignment();
+                            $assignment->setTask($task);
+                            $assignment->setUser($user);
+                            $assignment->setRole($assignmentData['role']);
+                            $task->addAssignment($assignment);
+                        }
+                    }
+                }
+            }
+            
             // Compétences
             if (isset($taskData['skills']) && is_array($taskData['skills'])) {
                 foreach ($taskData['skills'] as $skillName) {
@@ -137,10 +153,9 @@ class TaskController extends AbstractController
             $this->em->persist($task);
             $this->em->flush();
             
-            // Assignation automatique si demandée
-            if (isset($taskData['autoAssign']) && $taskData['autoAssign'] === true) {
-                $this->taskAssignmentService->autoAssignTask($task);
-            }
+            // Assignation automatique supprimée - utilisez l'assignation simple
+            
+            // Les alertes seront vérifiées automatiquement via l'EventListener
             
             $data = $this->serializer->serialize($task, 'json', ['groups' => 'task:read']);
             return new JsonResponse($data, 201, [], true);
@@ -198,13 +213,36 @@ class TaskController extends AbstractController
                 $task->setActualHours($taskData['actualHours']);
             }
             
-            // Assignation
+            // Assignation simple (pour compatibilité)
             if (isset($taskData['assigneeId'])) {
                 if ($taskData['assigneeId']) {
                     $assignee = $this->userRepository->find($taskData['assigneeId']);
                     $task->setAssignee($assignee);
                 } else {
                     $task->setAssignee(null);
+                }
+            }
+            
+            // Assignations multiples
+            if (isset($taskData['assignments']) && is_array($taskData['assignments'])) {
+                // Supprimer toutes les assignations existantes
+                foreach ($task->getAssignments() as $assignment) {
+                    $task->removeAssignment($assignment);
+                    $this->em->remove($assignment);
+                }
+                
+                // Ajouter les nouvelles assignations
+                foreach ($taskData['assignments'] as $assignmentData) {
+                    if (isset($assignmentData['userId']) && isset($assignmentData['role'])) {
+                        $user = $this->userRepository->find($assignmentData['userId']);
+                        if ($user) {
+                            $assignment = new \App\Entity\TaskAssignment();
+                            $assignment->setTask($task);
+                            $assignment->setUser($user);
+                            $assignment->setRole($assignmentData['role']);
+                            $task->addAssignment($assignment);
+                        }
+                    }
                 }
             }
             
@@ -232,6 +270,8 @@ class TaskController extends AbstractController
             }
             
             $this->em->flush();
+            
+            // Les alertes seront vérifiées automatiquement via l'EventListener
             
             $data = $this->serializer->serialize($task, 'json', ['groups' => 'task:read']);
             return new JsonResponse($data, 200, [], true);
@@ -262,6 +302,32 @@ class TaskController extends AbstractController
             
         } catch (\Exception $e) {
             return new JsonResponse(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    #[Route('/trigger-alerts', name: 'trigger_alerts', methods: ['POST'])]
+    public function triggerAlerts(): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Seuls les managers peuvent déclencher manuellement les alertes
+        if (!$this->permissionService->canAssignTasks($user)) {
+            return $this->json(['message' => 'Accès non autorisé pour déclencher les alertes'], Response::HTTP_FORBIDDEN);
+        }
+
+        try {
+            $alerts = $this->alertService->checkAndGenerateAllAlerts();
+            
+            return $this->json([
+                'message' => sprintf('%d alertes générées', count($alerts)),
+                'alerts' => $alerts
+            ], 200, [], ['groups' => ['notification:read']]);
+            
+        } catch (\Exception $e) {
+            return $this->json(['error' => $e->getMessage()], 400);
         }
     }
 }

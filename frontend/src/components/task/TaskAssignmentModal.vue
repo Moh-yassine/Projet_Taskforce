@@ -5,25 +5,22 @@
         <h2>Assigner la tâche</h2>
         <button @click="closeModal" class="close-btn">&times;</button>
       </div>
-      
+
       <div class="modal-body">
         <div class="task-info">
           <h3>{{ task?.title }}</h3>
           <p>{{ task?.description }}</p>
         </div>
-        
+
         <div class="assignment-section">
           <h4>Assigner à un collaborateur</h4>
-          
+
           <div class="user-selection">
-            <div 
-              v-for="user in availableUsers" 
+            <div
+              v-for="user in availableUsers"
               :key="user.id"
               @click="selectUser(user)"
-              :class="[
-                'user-card',
-                { 'selected': selectedUser?.id === user.id }
-              ]"
+              :class="['user-card', { selected: selectedUser?.id === user.id }]"
             >
               <div class="user-avatar">
                 <img v-if="user.avatar" :src="user.avatar" :alt="user.firstName" />
@@ -35,11 +32,7 @@
                 <div class="user-name">{{ user.firstName }} {{ user.lastName }}</div>
                 <div class="user-role">{{ user.role }}</div>
                 <div class="user-skills">
-                  <span 
-                    v-for="skill in user.skills.slice(0, 3)" 
-                    :key="skill.id"
-                    class="skill-tag"
-                  >
+                  <span v-for="skill in user.skills.slice(0, 3)" :key="skill.id" class="skill-tag">
                     {{ skill.name }}
                   </span>
                   <span v-if="user.skills.length > 3" class="more-skills">
@@ -62,7 +55,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="assignment-reason">
           <h4>Raison de l'assignation</h4>
           <textarea
@@ -72,7 +65,7 @@
             class="form-textarea"
           ></textarea>
         </div>
-        
+
         <div class="skill-match" v-if="selectedUser">
           <h4>Correspondance des compétences</h4>
           <div class="match-analysis">
@@ -97,34 +90,28 @@
               </div>
             </div>
           </div>
-          
+
           <div class="skills-comparison">
             <div class="skills-section">
               <h5>Compétences requises</h5>
               <div class="skills-list">
-                <span 
-                  v-for="skill in task?.skills || []" 
+                <span
+                  v-for="skill in task?.skills || []"
                   :key="skill"
-                  :class="[
-                    'skill-tag',
-                    { 'matched': matchingSkills.includes(skill) }
-                  ]"
+                  :class="['skill-tag', { matched: matchingSkills.includes(skill) }]"
                 >
                   {{ skill }}
                 </span>
               </div>
             </div>
-            
+
             <div class="skills-section">
               <h5>Compétences du collaborateur</h5>
               <div class="skills-list">
-                <span 
-                  v-for="skill in selectedUser.skills" 
+                <span
+                  v-for="skill in selectedUser.skills"
                   :key="skill.id"
-                  :class="[
-                    'skill-tag',
-                    { 'matched': matchingSkills.includes(skill.name) }
-                  ]"
+                  :class="['skill-tag', { matched: matchingSkills.includes(skill.name) }]"
                 >
                   {{ skill.name }}
                 </span>
@@ -133,16 +120,10 @@
           </div>
         </div>
       </div>
-      
+
       <div class="modal-actions">
-        <button @click="closeModal" class="btn btn-secondary">
-          Annuler
-        </button>
-        <button 
-          @click="handleAssignment" 
-          class="btn btn-primary"
-          :disabled="!selectedUser"
-        >
+        <button @click="closeModal" class="btn btn-secondary">Annuler</button>
+        <button @click="handleAssignment" class="btn btn-primary" :disabled="!selectedUser">
           Assigner la tâche
         </button>
       </div>
@@ -184,7 +165,7 @@ interface Props {
 
 interface Emits {
   (e: 'close'): void
-  (e: 'assign', data: { userId: number, reason: string }): void
+  (e: 'assign', data: { userId: number; reason: string }): void
 }
 
 const props = defineProps<Props>()
@@ -198,30 +179,31 @@ const assignmentReason = ref('')
 // Calculs
 const matchingSkills = computed(() => {
   if (!selectedUser.value || !props.task?.skills) return []
-  
-  return props.task.skills.filter(taskSkill =>
-    selectedUser.value!.skills.some(userSkill => 
-      userSkill.name.toLowerCase() === taskSkill.toLowerCase()
-    )
+
+  return props.task.skills.filter((taskSkill) =>
+    selectedUser.value!.skills.some(
+      (userSkill) => userSkill.name.toLowerCase() === taskSkill.toLowerCase(),
+    ),
   )
 })
 
 const missingSkills = computed(() => {
   if (!selectedUser.value || !props.task?.skills) return props.task?.skills || []
-  
-  return props.task.skills.filter(taskSkill =>
-    !selectedUser.value!.skills.some(userSkill => 
-      userSkill.name.toLowerCase() === taskSkill.toLowerCase()
-    )
+
+  return props.task.skills.filter(
+    (taskSkill) =>
+      !selectedUser.value!.skills.some(
+        (userSkill) => userSkill.name.toLowerCase() === taskSkill.toLowerCase(),
+      ),
   )
 })
 
 const skillMatchScore = computed(() => {
   if (!selectedUser.value || !props.task?.skills?.length) return 0
-  
+
   const matchCount = matchingSkills.value.length
   const totalRequired = props.task.skills.length
-  
+
   return Math.round((matchCount / totalRequired) * 100)
 })
 
@@ -235,7 +217,7 @@ const loadAvailableUsers = async () => {
   try {
     // TODO: Implémenter le service utilisateurs
     // availableUsers.value = await userService.getProjectUsers(props.project?.id)
-    
+
     // Données de test
     availableUsers.value = [
       {
@@ -246,10 +228,10 @@ const loadAvailableUsers = async () => {
         skills: [
           { id: 1, name: 'Vue.js', level: 8 },
           { id: 2, name: 'TypeScript', level: 7 },
-          { id: 3, name: 'CSS', level: 6 }
+          { id: 3, name: 'CSS', level: 6 },
         ],
         currentWorkload: 60,
-        availability: 40
+        availability: 40,
       },
       {
         id: 2,
@@ -259,10 +241,10 @@ const loadAvailableUsers = async () => {
         skills: [
           { id: 4, name: 'UI/UX', level: 9 },
           { id: 5, name: 'Figma', level: 8 },
-          { id: 6, name: 'Photoshop', level: 7 }
+          { id: 6, name: 'Photoshop', level: 7 },
         ],
         currentWorkload: 30,
-        availability: 70
+        availability: 70,
       },
       {
         id: 3,
@@ -272,10 +254,10 @@ const loadAvailableUsers = async () => {
         skills: [
           { id: 7, name: 'Gestion de projet', level: 9 },
           { id: 8, name: 'Agile', level: 8 },
-          { id: 9, name: 'Communication', level: 9 }
+          { id: 9, name: 'Communication', level: 9 },
         ],
         currentWorkload: 80,
-        availability: 20
+        availability: 20,
       },
       {
         id: 4,
@@ -285,11 +267,11 @@ const loadAvailableUsers = async () => {
         skills: [
           { id: 10, name: 'Stratégie', level: 9 },
           { id: 11, name: 'Leadership', level: 8 },
-          { id: 12, name: 'Analyse', level: 7 }
+          { id: 12, name: 'Analyse', level: 7 },
         ],
         currentWorkload: 50,
-        availability: 50
-      }
+        availability: 50,
+      },
     ]
   } catch (error) {
     console.error('Erreur lors du chargement des utilisateurs:', error)
@@ -322,7 +304,7 @@ const handleAssignment = () => {
   if (selectedUser.value) {
     emit('assign', {
       userId: selectedUser.value.id,
-      reason: assignmentReason.value
+      reason: assignmentReason.value,
     })
   }
 }
@@ -354,7 +336,9 @@ const closeModal = () => {
   max-width: 800px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .assignment-modal {
@@ -733,35 +717,35 @@ const closeModal = () => {
     margin: 1rem;
     max-width: calc(100vw - 2rem);
   }
-  
+
   .user-selection {
     grid-template-columns: 1fr;
   }
-  
+
   .user-card {
     flex-direction: column;
     text-align: center;
   }
-  
+
   .user-metrics {
     flex-direction: row;
     justify-content: space-around;
     width: 100%;
   }
-  
+
   .match-analysis {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .skills-comparison {
     grid-template-columns: 1fr;
   }
-  
+
   .modal-actions {
     flex-direction: column;
   }
-  
+
   .btn {
     width: 100%;
   }

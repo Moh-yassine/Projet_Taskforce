@@ -5,11 +5,11 @@
         <h2>{{ isEdit ? 'Modifier la tâche' : 'Créer une nouvelle tâche' }}</h2>
         <button @click="closeModal" class="close-btn">&times;</button>
       </div>
-      
+
       <form @submit.prevent="handleSubmit" class="task-form">
         <div class="form-section">
           <h3>Informations de base</h3>
-          
+
           <div class="form-group">
             <label for="title">Titre de la tâche *</label>
             <input
@@ -21,7 +21,7 @@
               class="form-input"
             />
           </div>
-          
+
           <div class="form-group">
             <label for="description">Description</label>
             <textarea
@@ -32,16 +32,11 @@
               class="form-textarea"
             ></textarea>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label for="priority">Priorité *</label>
-              <select
-                id="priority"
-                v-model="formData.priority"
-                required
-                class="form-select"
-              >
+              <select id="priority" v-model="formData.priority" required class="form-select">
                 <option value="">Sélectionnez une priorité</option>
                 <option value="low">Basse</option>
                 <option value="medium">Moyenne</option>
@@ -49,14 +44,10 @@
                 <option value="urgent">Urgente</option>
               </select>
             </div>
-            
+
             <div class="form-group">
               <label for="status">Statut</label>
-              <select
-                id="status"
-                v-model="formData.status"
-                class="form-select"
-              >
+              <select id="status" v-model="formData.status" class="form-select">
                 <option value="todo">À faire</option>
                 <option value="in_progress">En cours</option>
                 <option value="completed">Terminé</option>
@@ -64,83 +55,89 @@
             </div>
           </div>
         </div>
-        
+
         <div class="form-section">
           <h3>Dates et historique</h3>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label for="startDate">Date de début</label>
-              <input
-                id="startDate"
-                v-model="formData.startDate"
-                type="date"
-                class="form-input"
-              />
+              <input id="startDate" v-model="formData.startDate" type="date" class="form-input" />
             </div>
-            
+
             <div class="form-group">
               <label for="dueDate">Date d'échéance</label>
-              <input
-                id="dueDate"
-                v-model="formData.dueDate"
-                type="date"
-                class="form-input"
-              />
+              <input id="dueDate" v-model="formData.dueDate" type="date" class="form-input" />
             </div>
           </div>
-          
         </div>
-        
+
         <div class="form-section">
           <h3>Assignation et compétences</h3>
-          
+
           <div class="form-group">
             <label for="assignee">Assigner à</label>
-            <select
-              id="assignee"
-              v-model="formData.assigneeId"
-              class="form-select"
-            >
-              <option value="">Non assigné</option>
-              <option 
-                v-for="user in availableUsers" 
-                :key="user.id"
-                :value="user.id"
-                :disabled="user.remainingCapacity < (formData.estimatedHours || 0)"
-              >
-                {{ user.firstName }} {{ user.lastName }} ({{ user.role }})
-                <span v-if="user.remainingCapacity < (formData.estimatedHours || 0)">- Surcharge</span>
-                <span v-else>- {{ user.remainingCapacity }}h disponibles</span>
-              </option>
+            <select id="assignee" v-model="formData.assigneeId" class="form-select">
+              <option value="">Sélectionnez un utilisateur</option>
+              <optgroup label="Managers">
+                <option
+                  v-for="user in managers"
+                  :key="user.id"
+                  :value="user.id"
+                  :disabled="(user.remainingCapacity || 0) < (formData.estimatedHours || 0)"
+                >
+                  {{ user.firstName }} {{ user.lastName }} - {{ user.remainingCapacity || 0 }}h
+                  disponibles
+                </option>
+              </optgroup>
+              <optgroup label="Collaborateurs">
+                <option
+                  v-for="user in collaborators"
+                  :key="user.id"
+                  :value="user.id"
+                  :disabled="(user.remainingCapacity || 0) < (formData.estimatedHours || 0)"
+                >
+                  {{ user.firstName }} {{ user.lastName }} - {{ user.remainingCapacity || 0 }}h
+                  disponibles
+                </option>
+              </optgroup>
             </select>
           </div>
-          
+
           <!-- Affichage de la charge de travail de l'utilisateur sélectionné -->
           <div v-if="selectedUser" class="workload-info">
             <h4>Charge de travail de {{ selectedUser.firstName }} {{ selectedUser.lastName }}</h4>
             <div class="workload-details">
               <div class="workload-bar">
-                <div 
-                  class="workload-fill" 
-                  :style="{ 
-                    width: `${Math.min(selectedUser.utilizationPercentage, 100)}%`,
-                    backgroundColor: getUtilizationColor(selectedUser.utilizationPercentage)
+                <div
+                  class="workload-fill"
+                  :style="{
+                    width: `${Math.min(selectedUser.utilizationPercentage || 0, 100)}%`,
+                    backgroundColor: getUtilizationColor(selectedUser.utilizationPercentage || 0),
                   }"
                 ></div>
               </div>
               <div class="workload-stats">
-                <span>{{ selectedUser.currentWeekHours }}h / {{ selectedUser.maxWeekHours }}h</span>
-                <span class="utilization-percentage" :style="{ color: getUtilizationColor(selectedUser.utilizationPercentage) }">
-                  {{ selectedUser.utilizationPercentage.toFixed(1) }}%
+                <span
+                  >{{ selectedUser.currentWeekHours || 0 }}h /
+                  {{ selectedUser.maxWeekHours || 40 }}h</span
+                >
+                <span
+                  class="utilization-percentage"
+                  :style="{ color: getUtilizationColor(selectedUser.utilizationPercentage || 0) }"
+                >
+                  {{ (selectedUser.utilizationPercentage || 0).toFixed(1) }}%
                 </span>
               </div>
-              <div v-if="newTotalHours > selectedUser.maxWeekHours" class="overload-warning">
-                ⚠️ Surcharge: {{ newTotalHours }}h > {{ selectedUser.maxWeekHours }}h
+              <div
+                v-if="newTotalHours > (selectedUser.maxWeekHours || 40)"
+                class="overload-warning"
+              >
+                ⚠️ Surcharge: {{ newTotalHours }}h > {{ selectedUser.maxWeekHours || 40 }}h
               </div>
             </div>
           </div>
-          
+
           <div class="form-group">
             <label>Compétences requises</label>
             <div class="skills-container">
@@ -154,16 +151,12 @@
                 />
                 <button type="button" @click="addSkill" class="add-skill-btn">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
                   </svg>
                 </button>
               </div>
               <div class="skills-list">
-                <span 
-                  v-for="(skill, index) in formData.skills" 
-                  :key="index"
-                  class="skill-tag"
-                >
+                <span v-for="(skill, index) in formData.skills" :key="index" class="skill-tag">
                   {{ skill.name }}
                   <button type="button" @click="removeSkill(index)" class="remove-skill">
                     &times;
@@ -173,10 +166,10 @@
             </div>
           </div>
         </div>
-        
+
         <div class="form-section">
           <h3>Charge de travail</h3>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label for="estimatedHours">Heures estimées</label>
@@ -190,7 +183,7 @@
                 class="form-input"
               />
             </div>
-            
+
             <div class="form-group">
               <label for="actualHours">Heures réelles</label>
               <input
@@ -206,11 +199,9 @@
             </div>
           </div>
         </div>
-        
+
         <div class="modal-actions">
-          <button type="button" @click="closeModal" class="btn btn-secondary">
-            Annuler
-          </button>
+          <button type="button" @click="closeModal" class="btn btn-secondary">Annuler</button>
           <button type="submit" class="btn btn-primary" :disabled="!isFormValid">
             {{ isEdit ? 'Enregistrer les modifications' : 'Créer la tâche' }}
           </button>
@@ -218,7 +209,7 @@
       </form>
     </div>
   </div>
-  
+
   <!-- Popup de confirmation -->
   <div v-if="showSuccessMessage" class="success-popup">
     <div class="success-content">
@@ -241,6 +232,10 @@ interface Task {
   status: string
   priority: string
   assigneeId?: number
+  assignments?: Array<{
+    userId: number
+    role: string
+  }>
   skills: Array<{
     id: number
     name: string
@@ -260,7 +255,12 @@ interface User {
   id: number
   firstName: string
   lastName: string
-  role: string
+  role?: string
+  roles?: string[]
+  remainingCapacity?: number
+  currentWeekHours?: number
+  maxWeekHours?: number
+  utilizationPercentage?: number
 }
 
 interface Props {
@@ -275,7 +275,7 @@ interface Emits {
 
 const props = withDefaults(defineProps<Props>(), {
   task: null,
-  project: null
+  project: null,
 })
 
 const emit = defineEmits<Emits>()
@@ -287,27 +287,39 @@ const formData = ref<Task>({
   status: 'todo',
   priority: '',
   assigneeId: undefined,
+  assignments: [],
   skills: [],
   startDate: '',
   dueDate: '',
   estimatedHours: 0,
   actualHours: 0,
-  history: []
+  history: [],
 })
 
 const newSkill = ref('')
 const availableUsers = ref<User[]>([])
 const showSuccessMessage = ref(false)
 
+// Computed properties pour séparer les utilisateurs par rôle
+const managers = computed(() => {
+  return availableUsers.value.filter((user) => user.roles && user.roles.includes('ROLE_MANAGER'))
+})
+
+const collaborators = computed(() => {
+  return availableUsers.value.filter(
+    (user) => user.roles && user.roles.includes('ROLE_COLLABORATOR'),
+  )
+})
+
 // Computed properties pour la charge de travail
 const selectedUser = computed(() => {
   if (!formData.value.assigneeId) return null
-  return availableUsers.value.find(user => user.id === formData.value.assigneeId)
+  return availableUsers.value.find((user) => user.id === formData.value.assigneeId)
 })
 
 const newTotalHours = computed(() => {
   if (!selectedUser.value) return 0
-  return selectedUser.value.currentWeekHours + (formData.value.estimatedHours || 0)
+  return (selectedUser.value.currentWeekHours || 0) + (formData.value.estimatedHours || 0)
 })
 
 // Computed pour déterminer si on est en mode édition
@@ -321,12 +333,14 @@ const isFormValid = computed(() => {
 // Fonction pour initialiser les données du formulaire
 const initializeFormData = () => {
   if (props.task) {
-    formData.value = { 
+    formData.value = {
       ...props.task,
-      assigneeId: props.task.assignee?.id || null,
+      assigneeId: (props.task as any).assignee?.id || null,
       // Garder les compétences comme objets
-      skills: props.task.skills || []
+      skills: props.task.skills || [],
     }
+
+    // Pas d'assignations multiples - assignation simple uniquement
   } else {
     // Nouvelle tâche - initialiser avec des valeurs par défaut
     formData.value = {
@@ -334,20 +348,25 @@ const initializeFormData = () => {
       description: '',
       status: 'todo',
       priority: 'medium',
-      assigneeId: null,
+      assigneeId: undefined,
+      assignments: [],
       skills: [],
       startDate: '',
       dueDate: '',
       estimatedHours: 0,
-      actualHours: 0
+      actualHours: 0,
     }
   }
 }
 
 // Watcher pour réagir aux changements de props
-watch(() => props.task, () => {
-  initializeFormData()
-}, { immediate: true })
+watch(
+  () => props.task,
+  () => {
+    initializeFormData()
+  },
+  { immediate: true },
+)
 
 // Initialisation
 onMounted(() => {
@@ -359,34 +378,30 @@ onMounted(() => {
 const loadAvailableUsers = async () => {
   try {
     console.log('Chargement des utilisateurs assignables...')
-    
+
     // Vérifier le token
     const token = localStorage.getItem('authToken')
     console.log('Token présent:', !!token)
     console.log('Token:', token ? token.substring(0, 20) + '...' : 'Aucun token')
-    
+
     // Récupérer les vrais utilisateurs de la base de données
     const assignableUsers = await userService.getAssignableUsers()
-    
+
     console.log('Utilisateurs récupérés:', assignableUsers)
-    
+
     // Transformer les données pour correspondre au format attendu
-    availableUsers.value = assignableUsers.map(user => ({
+    availableUsers.value = assignableUsers.map((user) => ({
       id: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
-      role: Array.isArray(user.roles) 
-        ? (user.roles.includes('ROLE_MANAGER') ? 'Manager' : 
-           user.roles.includes('ROLE_COLLABORATOR') ? 'Collaborateur' : 'Utilisateur')
-        : (user.roles['2'] === 'ROLE_MANAGER' ? 'Manager' :
-           user.roles['2'] === 'ROLE_COLLABORATOR' ? 'Collaborateur' : 'Utilisateur'),
+      roles: user.roles, // Garder le tableau des rôles
       email: user.email,
       currentWeekHours: user.currentWeekHours,
       maxWeekHours: user.maxWeekHours,
       utilizationPercentage: user.utilizationPercentage,
-      remainingCapacity: user.remainingCapacity
+      remainingCapacity: user.remainingCapacity,
     }))
-    
+
     console.log('Utilisateurs transformés:', availableUsers.value)
   } catch (error) {
     console.error('Erreur lors du chargement des utilisateurs:', error)
@@ -399,15 +414,13 @@ const loadAvailableUsers = async () => {
 const addSkill = () => {
   if (newSkill.value.trim()) {
     // Vérifier si la compétence existe déjà
-    const skillExists = formData.value.skills.some(skill => 
-      skill.name === newSkill.value.trim()
-    )
-    
+    const skillExists = formData.value.skills.some((skill) => skill.name === newSkill.value.trim())
+
     if (!skillExists) {
       // Ajouter la compétence comme objet (sans ID pour les nouvelles)
       formData.value.skills.push({
         id: 0, // ID temporaire, sera assigné par le backend
-        name: newSkill.value.trim()
+        name: newSkill.value.trim(),
       })
       newSkill.value = ''
     }
@@ -424,19 +437,21 @@ const handleSubmit = () => {
     const taskData = {
       ...formData.value,
       // Convertir les compétences en chaînes de caractères pour le backend
-      skills: formData.value.skills.map(skill => skill.name),
-      updatedAt: new Date().toISOString()
+      skills: formData.value.skills.map((skill) => skill.name),
+      // Assignation simple uniquement
+      assigneeId: formData.value.assigneeId,
+      updatedAt: new Date().toISOString(),
     }
-    
+
     if (isEdit.value && props.task?.id) {
       taskData.id = props.task.id
     }
-    
-    emit('save', taskData)
-    
+
+    emit('save', taskData as any)
+
     // Afficher la popup de confirmation
     showSuccessMessage.value = true
-    
+
     // Fermer la popup après 2 secondes
     setTimeout(() => {
       showSuccessMessage.value = false
@@ -454,7 +469,7 @@ const formatDate = (dateString: string) => {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -489,7 +504,9 @@ const getUtilizationColor = (percentage: number) => {
   max-width: 800px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 .task-modal {
@@ -741,24 +758,24 @@ const getUtilizationColor = (percentage: number) => {
     margin: 1rem;
     max-width: calc(100vw - 2rem);
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .modal-actions {
     flex-direction: column;
   }
-  
+
   .btn {
     width: 100%;
   }
-  
+
   .history-item {
     grid-template-columns: 1fr;
     gap: 0.25rem;
   }
-  
+
   .history-user {
     text-align: left;
   }
@@ -802,16 +819,20 @@ const getUtilizationColor = (percentage: number) => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideIn {
-  from { 
+  from {
     opacity: 0;
     transform: translateY(-20px) scale(0.95);
   }
-  to { 
+  to {
     opacity: 1;
     transform: translateY(0) scale(1);
   }

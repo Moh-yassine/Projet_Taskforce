@@ -120,7 +120,8 @@
                 <td class="manager-cell">
                   <div class="manager-info">
                     <div class="manager-avatar">
-                      {{ project.manager.firstName.charAt(0) }}{{ project.manager.lastName.charAt(0) }}
+                      {{ project.manager.firstName.charAt(0)
+                      }}{{ project.manager.lastName.charAt(0) }}
                     </div>
                     <span>{{ project.manager.firstName }} {{ project.manager.lastName }}</span>
                   </div>
@@ -144,7 +145,7 @@
                   </div>
                 </td>
                 <td class="deadline-cell">
-                  <span :class="{ 'overdue': isOverdue(project.deadline) }">
+                  <span :class="{ overdue: isOverdue(project.deadline) }">
                     {{ formatDate(project.deadline) }}
                   </span>
                 </td>
@@ -189,7 +190,7 @@ const userPerformance = ref([
     role: 'ROLE_COLLABORATOR',
     assignedTasks: 12,
     completedTasks: 10,
-    completionRate: 83
+    completionRate: 83,
   },
   {
     id: 2,
@@ -198,7 +199,7 @@ const userPerformance = ref([
     role: 'ROLE_COLLABORATOR',
     assignedTasks: 15,
     completedTasks: 12,
-    completionRate: 80
+    completionRate: 80,
   },
   {
     id: 3,
@@ -207,38 +208,38 @@ const userPerformance = ref([
     role: 'ROLE_MANAGER',
     assignedTasks: 8,
     completedTasks: 7,
-    completionRate: 88
-  }
+    completionRate: 88,
+  },
 ])
 
 const projects = ref([
   {
     id: 1,
     name: 'Application Web',
-    description: 'Développement d\'une application web moderne',
+    description: "Développement d'une application web moderne",
     manager: {
       firstName: 'Sophie',
-      lastName: 'Leroy'
+      lastName: 'Leroy',
     },
     status: 'in_progress',
     progress: 75,
     completedTasks: 15,
     totalTasks: 20,
-    deadline: '2024-02-15'
+    deadline: '2024-02-15',
   },
   {
     id: 2,
     name: 'API Backend',
-    description: 'Création de l\'API REST',
+    description: "Création de l'API REST",
     manager: {
       firstName: 'Thomas',
-      lastName: 'Moreau'
+      lastName: 'Moreau',
     },
     status: 'completed',
     progress: 100,
     completedTasks: 12,
     totalTasks: 12,
-    deadline: '2024-01-30'
+    deadline: '2024-01-30',
   },
   {
     id: 3,
@@ -246,27 +247,26 @@ const projects = ref([
     description: 'Implémentation des tests',
     manager: {
       firstName: 'Julie',
-      lastName: 'Petit'
+      lastName: 'Petit',
     },
     status: 'planning',
     progress: 25,
     completedTasks: 3,
     totalTasks: 12,
-    deadline: '2024-03-01'
-  }
+    deadline: '2024-03-01',
+  },
 ])
 
 const loadReports = async () => {
   try {
     loading.value = true
     error.value = ''
-    
+
     // TODO: Remplacer par des appels API réels
     // const reports = await reportService.getReports()
-    
+
     // Simuler un délai de chargement
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000))
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Erreur lors du chargement des rapports'
   } finally {
@@ -280,22 +280,22 @@ const getRoleLabel = (role: string): string => {
 
 const getStatusLabel = (status: string): string => {
   const statusLabels: Record<string, string> = {
-    'planning': 'Planification',
-    'in_progress': 'En cours',
-    'completed': 'Terminé',
-    'on_hold': 'En attente',
-    'cancelled': 'Annulé'
+    planning: 'Planification',
+    in_progress: 'En cours',
+    completed: 'Terminé',
+    on_hold: 'En attente',
+    cancelled: 'Annulé',
   }
   return statusLabels[status] || status
 }
 
 const getStatusClass = (status: string): string => {
   const statusClasses: Record<string, string> = {
-    'planning': 'status-planning',
-    'in_progress': 'status-in-progress',
-    'completed': 'status-completed',
-    'on_hold': 'status-on-hold',
-    'cancelled': 'status-cancelled'
+    planning: 'status-planning',
+    in_progress: 'status-in-progress',
+    completed: 'status-completed',
+    on_hold: 'status-on-hold',
+    cancelled: 'status-cancelled',
   }
   return statusClasses[status] || 'status-default'
 }
@@ -659,8 +659,12 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error {
@@ -691,20 +695,20 @@ onMounted(() => {
   .charts-section {
     grid-template-columns: 1fr;
   }
-  
+
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .user-metrics {
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .projects-table {
     font-size: 14px;
   }
-  
+
   .projects-table th,
   .projects-table td {
     padding: 12px 8px;

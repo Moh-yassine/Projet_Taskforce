@@ -17,8 +17,8 @@
         </div>
 
         <div class="users-list">
-          <div 
-            v-for="user in filteredUsers" 
+          <div
+            v-for="user in filteredUsers"
             :key="user.id"
             class="user-item"
             @click="assignUser(user)"
@@ -30,11 +30,7 @@
               <span class="user-name">{{ user.fullName }}</span>
               <span class="user-email">{{ user.email }}</span>
               <div class="user-skills">
-                <span 
-                  v-for="skill in user.skills.slice(0, 3)" 
-                  :key="skill.id"
-                  class="skill-tag"
-                >
+                <span v-for="skill in user.skills.slice(0, 3)" :key="skill.id" class="skill-tag">
                   {{ skill.name }}
                 </span>
               </div>
@@ -52,9 +48,7 @@
       </div>
 
       <div class="modal-footer">
-        <button @click="closeModal" class="btn btn-secondary">
-          Annuler
-        </button>
+        <button @click="closeModal" class="btn btn-secondary">Annuler</button>
       </div>
     </div>
   </div>
@@ -75,10 +69,11 @@ const searchTerm = ref('')
 
 const filteredUsers = computed(() => {
   if (!searchTerm.value) return users.value
-  
-  return users.value.filter(user => 
-    user.fullName.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.value.toLowerCase())
+
+  return users.value.filter(
+    (user) =>
+      user.fullName.toLowerCase().includes(searchTerm.value.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.value.toLowerCase()),
   )
 })
 
@@ -90,8 +85,8 @@ const loadAvailableUsers = async () => {
   try {
     const response = await fetch('http://localhost:8000/api/users/available', {
       headers: {
-        'Authorization': `Bearer ${authService.getAuthToken()}`
-      }
+        Authorization: `Bearer ${authService.getAuthToken()}`,
+      },
     })
     if (response.ok) {
       users.value = await response.json()
@@ -107,20 +102,20 @@ const assignUser = async (user: any) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${authService.getAuthToken()}`
+        Authorization: `Bearer ${authService.getAuthToken()}`,
       },
-      body: JSON.stringify({ userId: user.id })
+      body: JSON.stringify({ userId: user.id }),
     })
 
     if (response.ok) {
       emit('user-assigned')
     } else {
       const error = await response.json()
-      alert(`Erreur: ${error.message || 'Erreur lors de l\'assignation'}`)
+      alert(`Erreur: ${error.message || "Erreur lors de l'assignation"}`)
     }
   } catch (error) {
-    console.error('Erreur lors de l\'assignation:', error)
-    alert('Erreur lors de l\'assignation')
+    console.error("Erreur lors de l'assignation:", error)
+    alert("Erreur lors de l'assignation")
   }
 }
 
@@ -337,22 +332,22 @@ const closeModal = () => {
     margin: 1rem;
     max-height: calc(100vh - 2rem);
   }
-  
+
   .user-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.75rem;
   }
-  
+
   .user-workload {
     text-align: left;
     align-self: flex-start;
   }
-  
+
   .modal-footer {
     flex-direction: column;
   }
-  
+
   .btn {
     width: 100%;
   }

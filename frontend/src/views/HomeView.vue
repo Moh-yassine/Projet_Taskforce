@@ -20,8 +20,8 @@
             <span class="highlight">TaskForce</span>
           </h1>
           <p class="hero-description">
-            Une plateforme collaborative pour gérer vos tâches, 
-            organiser vos projets et travailler efficacement en équipe.
+            Une plateforme collaborative pour gérer vos tâches, organiser vos projets et travailler
+            efficacement en équipe.
           </p>
           <div class="hero-buttons">
             <button class="btn btn-primary btn-large" @click="handleSignup">
@@ -272,34 +272,34 @@ const handleSignup = () => {
   .hero-title {
     font-size: 2.5rem;
   }
-  
+
   .hero-description {
     font-size: 1.2rem;
   }
-  
+
   .hero-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .btn-large {
     width: 100%;
     max-width: 300px;
   }
-  
+
   .header-content {
     padding: 0 1rem;
   }
-  
+
   .nav-buttons {
     gap: 1rem;
   }
-  
+
   .btn {
     padding: 0.8rem 1.5rem;
     font-size: 0.9rem;
   }
-  
+
   .footer-section h3 {
     font-size: 2rem;
   }
@@ -309,20 +309,20 @@ const handleSignup = () => {
   .hero-section {
     padding: 6rem 1rem 4rem;
   }
-  
+
   .hero-title {
     font-size: 2rem;
   }
-  
+
   .hero-description {
     font-size: 1rem;
   }
-  
+
   .btn {
     padding: 0.7rem 1.2rem;
     font-size: 0.8rem;
   }
-  
+
   .footer-section h3 {
     font-size: 1.8rem;
   }

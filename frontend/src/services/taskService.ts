@@ -1,6 +1,6 @@
 import { authService } from './authService'
 
-const API_BASE_URL = '/api'
+const API_BASE_URL = 'http://127.0.0.1:8000/api'
 
 export interface Task {
   id: number
@@ -61,7 +61,7 @@ export interface AssignTaskData {
 class TaskService {
   private async makeRequest(url: string, options: RequestInit = {}): Promise<Response> {
     const token = authService.getAuthToken()
-    
+
     const defaultOptions: RequestInit = {
       headers: {
         ...authService.getAuthHeaders(),
@@ -71,24 +71,24 @@ class TaskService {
     }
 
     const response = await fetch(url, { ...defaultOptions, ...options })
-    
+
     if (response.status === 401) {
       authService.logout()
       window.location.href = '/login'
       throw new Error('Non autorisé')
     }
-    
+
     return response
   }
 
   async getTasksByProject(projectId: number): Promise<Task[]> {
     try {
       const response = await this.makeRequest(`${API_BASE_URL}/tasks?project_id=${projectId}`)
-      
+
       if (!response.ok) {
         throw new Error(`Erreur ${response.status}: ${response.statusText}`)
       }
-      
+
       return await response.json()
     } catch (error) {
       console.error('Erreur lors de la récupération des tâches:', error)
@@ -96,14 +96,32 @@ class TaskService {
     }
   }
 
-  async getTask(taskId: number): Promise<Task> {
+  /**
+   * Récupère toutes les tâches (pour les statistiques admin)
+   */
+  async getAllTasks(): Promise<Task[]> {
     try {
-      const response = await this.makeRequest(`${API_BASE_URL}/tasks/${taskId}`)
-      
+      const response = await this.makeRequest(`${API_BASE_URL}/tasks`)
+
       if (!response.ok) {
         throw new Error(`Erreur ${response.status}: ${response.statusText}`)
       }
-      
+
+      return await response.json()
+    } catch (error) {
+      console.error('Erreur lors de la récupération de toutes les tâches:', error)
+      throw error
+    }
+  }
+
+  async getTask(taskId: number): Promise<Task> {
+    try {
+      const response = await this.makeRequest(`${API_BASE_URL}/tasks/${taskId}`)
+
+      if (!response.ok) {
+        throw new Error(`Erreur ${response.status}: ${response.statusText}`)
+      }
+
       return await response.json()
     } catch (error) {
       console.error('Erreur lors de la récupération de la tâche:', error)
@@ -117,12 +135,12 @@ class TaskService {
         method: 'POST',
         body: JSON.stringify(taskData),
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || `Erreur ${response.status}: ${response.statusText}`)
       }
-      
+
       return await response.json()
     } catch (error) {
       console.error('Erreur lors de la création de la tâche:', error)
@@ -136,12 +154,12 @@ class TaskService {
         method: 'PUT',
         body: JSON.stringify(taskData),
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || `Erreur ${response.status}: ${response.statusText}`)
       }
-      
+
       return await response.json()
     } catch (error) {
       console.error('Erreur lors de la mise à jour de la tâche:', error)
@@ -154,7 +172,7 @@ class TaskService {
       const response = await this.makeRequest(`${API_BASE_URL}/tasks/${taskId}`, {
         method: 'DELETE',
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || `Erreur ${response.status}: ${response.statusText}`)
@@ -171,15 +189,15 @@ class TaskService {
         method: 'POST',
         body: JSON.stringify(assignmentData),
       })
-      
+
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || `Erreur ${response.status}: ${response.statusText}`)
       }
-      
+
       return await response.json()
     } catch (error) {
-      console.error('Erreur lors de l\'assignation de la tâche:', error)
+      console.error("Erreur lors de l'assignation de la tâche:", error)
       throw error
     }
   }

@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8003/api'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api'
 
 export interface AssignableUser {
   id: number
@@ -42,6 +42,24 @@ export interface UserWorkload {
 
 class UserService {
   /**
+   * Récupère tous les utilisateurs
+   */
+  async getAllUsers(): Promise<AssignableUser[]> {
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await axios.get(`${API_BASE_URL}/users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la récupération des utilisateurs:', error)
+      throw error
+    }
+  }
+
+  /**
    * Récupère les utilisateurs qui peuvent recevoir des tâches
    */
   async getAssignableUsers(): Promise<AssignableUser[]> {
@@ -49,8 +67,8 @@ class UserService {
       const token = localStorage.getItem('authToken')
       const response = await axios.get(`${API_BASE_URL}/users/assignable`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       })
       return response.data
     } catch (error) {
@@ -67,8 +85,8 @@ class UserService {
       const token = localStorage.getItem('authToken')
       const response = await axios.get(`${API_BASE_URL}/users/${userId}/workload`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       })
       return response.data
     } catch (error) {
@@ -85,12 +103,12 @@ class UserService {
       const token = localStorage.getItem('authToken')
       const response = await axios.get(`${API_BASE_URL}/users/${userId}/tasks`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       })
       return response.data
     } catch (error) {
-      console.error('Erreur lors de la récupération des tâches de l\'utilisateur:', error)
+      console.error("Erreur lors de la récupération des tâches de l'utilisateur:", error)
       throw error
     }
   }
@@ -100,26 +118,26 @@ class UserService {
    */
   calculateAssignmentScore(user: AssignableUser, estimatedHours: number): number {
     let score = 0
-    
+
     // Score basé sur la capacité restante (70% du score)
     const capacityScore = (user.remainingCapacity / user.maxWeekHours) * 70
     score += capacityScore
-    
+
     // Pénalité si l'assignation dépasse la capacité
     if (estimatedHours > user.remainingCapacity) {
       score -= 50
     }
-    
+
     // Bonus si l'utilisateur a des compétences (20% du score)
     if (user.skills && user.skills.length > 0) {
       score += 20
     }
-    
+
     // Bonus pour les managers (10% du score)
     if (user.roles.includes('ROLE_MANAGER')) {
       score += 10
     }
-    
+
     return Math.max(0, score)
   }
 
@@ -128,9 +146,9 @@ class UserService {
    */
   sortUsersByAssignmentScore(users: AssignableUser[], estimatedHours: number): AssignableUser[] {
     return users
-      .map(user => ({
+      .map((user) => ({
         ...user,
-        assignmentScore: this.calculateAssignmentScore(user, estimatedHours)
+        assignmentScore: this.calculateAssignmentScore(user, estimatedHours),
       }))
       .sort((a, b) => b.assignmentScore - a.assignmentScore)
   }
@@ -139,19 +157,20 @@ class UserService {
    * Filtre les utilisateurs qui peuvent recevoir une tâche
    */
   getEligibleUsers(users: AssignableUser[], estimatedHours: number): AssignableUser[] {
-    return users.filter(user => 
-      user.canReceiveTasks && 
-      user.remainingCapacity >= estimatedHours
-    )
+    return users.filter((user) => user.canReceiveTasks && user.remainingCapacity >= estimatedHours)
   }
 
   /**
    * Obtient les recommandations d'assignation
    */
-  getAssignmentRecommendations(users: AssignableUser[], estimatedHours: number, limit: number = 3): AssignableUser[] {
+  getAssignmentRecommendations(
+    users: AssignableUser[],
+    estimatedHours: number,
+    limit: number = 3,
+  ): AssignableUser[] {
     const eligibleUsers = this.getEligibleUsers(users, estimatedHours)
     const sortedUsers = this.sortUsersByAssignmentScore(eligibleUsers, estimatedHours)
-    
+
     return sortedUsers.slice(0, limit)
   }
 
@@ -178,9 +197,11 @@ class UserService {
    * Vérifie si un utilisateur peut recevoir une tâche
    */
   canAssignToUser(user: AssignableUser, estimatedHours: number): boolean {
-    return user.canReceiveTasks && 
-           user.remainingCapacity >= estimatedHours &&
-           user.utilizationPercentage < 100
+    return (
+      user.canReceiveTasks &&
+      user.remainingCapacity >= estimatedHours &&
+      user.utilizationPercentage < 100
+    )
   }
 
   /**
@@ -211,12 +232,35 @@ class UserService {
       const token = localStorage.getItem('authToken')
       const response = await axios.get(`${API_BASE_URL}/users/my-tasks`, {
         headers: {
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       })
       return response.data
     } catch (error) {
       console.error('Erreur lors de la récupération de mes tâches:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Met à jour le rôle d'un utilisateur
+   */
+  async updateUserRole(userId: number, role: string): Promise<any> {
+    try {
+      const token = localStorage.getItem('authToken')
+      const response = await axios.put(
+        `${API_BASE_URL}/users/${userId}/role`,
+        { role },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        },
+      )
+      return response.data
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du rôle:', error)
       throw error
     }
   }

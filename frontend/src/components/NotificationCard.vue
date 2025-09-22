@@ -4,23 +4,47 @@
       <div class="modal-card" :class="typeClass" @click.stop>
         <div class="modal-header">
           <div class="modal-icon">
-            <svg v-if="type === 'success'" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+            <svg
+              v-if="type === 'success'"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
             </svg>
-            <svg v-else-if="type === 'error'" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            <svg
+              v-else-if="type === 'error'"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+              />
             </svg>
-            <svg v-else-if="type === 'warning'" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+            <svg
+              v-else-if="type === 'warning'"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z" />
             </svg>
             <svg v-else width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              <path
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"
+              />
             </svg>
           </div>
           <h3 class="modal-title">{{ title }}</h3>
           <button @click="close" class="modal-close">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              <path
+                d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+              />
             </svg>
           </button>
         </div>
@@ -53,7 +77,7 @@ const props = withDefaults(defineProps<Props>(), {
   type: 'info',
   buttonText: 'OK',
   autoClose: false,
-  duration: 3000
+  duration: 3000,
 })
 
 const emit = defineEmits<{
@@ -75,7 +99,7 @@ const close = () => {
 
 onMounted(() => {
   visible.value = true
-  
+
   if (props.autoClose) {
     timeoutId = window.setTimeout(() => {
       close()
@@ -108,7 +132,9 @@ onUnmounted(() => {
 .modal-card {
   background: white;
   border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
   max-width: 400px;
   width: 90%;
   max-height: 90vh;
