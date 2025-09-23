@@ -257,7 +257,7 @@ import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService, type User } from '@/services/authService'
 import { projectService, type Project } from '@/services/projectService'
-import { paymentService } from '@/services/paymentService'
+// import { paymentService } from '@/services/paymentService' // Service supprimé
 import CreateProjectModal from '@/components/CreateProjectModal.vue'
 import AvatarSelector from '@/components/AvatarSelector.vue'
 
@@ -336,12 +336,8 @@ const handleProjectCreated = async (project: any) => {
 
 
 const checkSubscriptionStatus = async () => {
-  try {
-    const response = await paymentService.getSubscriptionStatus()
-    hasActiveSubscription.value = response.hasActiveSubscription
-  } catch (error) {
-    console.error('Erreur lors de la vérification du statut d\'abonnement:', error)
-  }
+  // Statut d'abonnement désactivé - service de paiement supprimé
+  hasActiveSubscription.value = false
 }
 
 const tryPremiumTaskforce = () => {

@@ -13,17 +13,17 @@ describe('Real API URLs Validation', () => {
       expect(API_CONFIG.SKILLS_URL).toBe('http://127.0.0.1:8000/api/skills')
       expect(API_CONFIG.ROLES_URL).toBe('http://127.0.0.1:8000/api/roles')
       expect(API_CONFIG.NOTIFICATIONS_URL).toBe('http://127.0.0.1:8000/api/notifications')
-      expect(API_CONFIG.PAYMENTS_URL).toBe('http://127.0.0.1:8000/api/payment') // Corrigé!
+      // expect(API_CONFIG.PAYMENTS_URL).toBe('http://127.0.0.1:8000/api/payment') // Service supprimé
       expect(API_CONFIG.WORKLOAD_URL).toBe('http://127.0.0.1:8000/api/workload')
       expect(API_CONFIG.USER_SKILLS_URL).toBe('http://127.0.0.1:8000/api/user-skills')
       expect(API_CONFIG.USER_PROJECT_ROLES_URL).toBe('http://127.0.0.1:8000/api/user-project-roles')
     })
 
-    it('validates that payment URL uses singular form', () => {
-      // Test spécifique pour l'URL payment (pas payments)
-      expect(API_CONFIG.PAYMENTS_URL).toBe('http://127.0.0.1:8000/api/payment')
-      expect(API_CONFIG.PAYMENTS_URL).not.toBe('http://127.0.0.1:8000/api/payments')
-    })
+    // Test désactivé - service de paiement supprimé
+    // it('validates that payment URL uses singular form', () => {
+    //   expect(API_CONFIG.PAYMENTS_URL).toBe('http://127.0.0.1:8000/api/payment')
+    //   expect(API_CONFIG.PAYMENTS_URL).not.toBe('http://127.0.0.1:8000/api/payments')
+    // })
 
     it('checks all endpoints use HTTPS in production context', () => {
       // Test de structure - en production les URLs devraient être HTTPS
@@ -124,7 +124,7 @@ describe('Real API URLs Validation', () => {
         payment: [
           'GET /api/payment/config',
           'POST /api/payment/create-subscription',
-          'GET /api/payment/subscription-status',
+          // 'GET /api/payment/subscription-status', // Service supprimé
           'POST /api/payment/cancel-subscription',
           'POST /api/payment/webhook',
           'GET /api/payment/premium-features'
@@ -147,7 +147,7 @@ describe('Real API URLs Validation', () => {
       const paymentEndpoints = [
         'GET /api/payment/config',
         'POST /api/payment/create-subscription', 
-        'GET /api/payment/subscription-status',
+        // 'GET /api/payment/subscription-status', // Service supprimé
         'POST /api/payment/cancel-subscription',
         'POST /api/payment/webhook',
         'GET /api/payment/premium-features'

@@ -41,20 +41,26 @@ class AlertService
                 $supervisingManagers = $this->findSupervisingManagers($user);
                 
                 foreach ($supervisingManagers as $manager) {
-                    // Vérifier si une alerte existe déjà pour cet utilisateur et ce manager aujourd'hui
+                    // Vérifier si une alerte existe déjà ou a été récemment supprimée pour cet utilisateur et ce manager
                     $today = new \DateTime('today');
                     $tomorrow = new \DateTime('tomorrow');
+                    $recentlyDeleted = new \DateTime('-2 hours'); // Ne pas regénérer pendant 2h après suppression
+                    
                     $existingAlert = $this->notificationRepository->createQueryBuilder('n')
                         ->where('n.user = :manager')
                         ->andWhere('n.type = :type')
                         ->andWhere('n.message LIKE :userEmail')
-                        ->andWhere('n.createdAt >= :today')
-                        ->andWhere('n.createdAt < :tomorrow')
+                        ->andWhere(
+                            '(n.createdAt >= :today AND n.createdAt < :tomorrow AND n.deletedAt IS NULL) OR ' .
+                            '(n.deletedAt >= :recentlyDeleted)'
+                        )
                         ->setParameter('manager', $manager)
                         ->setParameter('type', 'workload_alert')
                         ->setParameter('userEmail', '%' . $user->getEmail() . '%')
                         ->setParameter('today', $today)
                         ->setParameter('tomorrow', $tomorrow)
+                        ->setParameter('recentlyDeleted', $recentlyDeleted)
+                        ->setMaxResults(1)
                         ->getQuery()
                         ->getOneOrNullResult();
 
@@ -109,20 +115,26 @@ class AlertService
         $supervisingManagers = $this->findSupervisingManagers($user);
         
         foreach ($supervisingManagers as $manager) {
-            // Vérifier si une alerte existe déjà pour cette tâche et ce manager aujourd'hui
+            // Vérifier si une alerte existe déjà ou a été récemment supprimée pour cette tâche et ce manager
             $today = new \DateTime('today');
             $tomorrow = new \DateTime('tomorrow');
+            $recentlyDeleted = new \DateTime('-2 hours'); // Ne pas regénérer pendant 2h après suppression
+            
             $existingAlert = $this->notificationRepository->createQueryBuilder('n')
                 ->where('n.user = :manager')
                 ->andWhere('n.type = :type')
                 ->andWhere('n.message LIKE :taskTitle')
-                ->andWhere('n.createdAt >= :today')
-                ->andWhere('n.createdAt < :tomorrow')
+                ->andWhere(
+                    '(n.createdAt >= :today AND n.createdAt < :tomorrow AND n.deletedAt IS NULL) OR ' .
+                    '(n.deletedAt >= :recentlyDeleted)'
+                )
                 ->setParameter('manager', $manager)
                 ->setParameter('type', 'delay_alert')
                 ->setParameter('taskTitle', '%' . $task->getTitle() . '%')
                 ->setParameter('today', $today)
                 ->setParameter('tomorrow', $tomorrow)
+                ->setParameter('recentlyDeleted', $recentlyDeleted)
+                ->setMaxResults(1)
                 ->getQuery()
                 ->getOneOrNullResult();
 
@@ -217,16 +229,22 @@ class AlertService
      */
     private function createDelayAlertForManager(User $projectManager, Task $task, ?User $specificAssignee = null): ?Notification
     {
-        // Vérifier si une alerte similaire existe déjà récemment (dans les dernières 24h)
+        // Vérifier si une alerte similaire existe déjà récemment ou a été supprimée récemment
+        $recentlyDeleted = new \DateTimeImmutable('-2 hours'); // Ne pas regénérer pendant 2h après suppression
         $recentAlert = $this->notificationRepository->createQueryBuilder('n')
             ->where('n.user = :manager')
             ->andWhere('n.type = :type')
             ->andWhere('n.relatedTask = :task')
-            ->andWhere('n.createdAt > :recent')
+            ->andWhere(
+                '(n.createdAt > :recent AND n.deletedAt IS NULL) OR ' .
+                '(n.deletedAt >= :recentlyDeleted)'
+            )
             ->setParameter('manager', $projectManager)
             ->setParameter('type', 'delay_alert')
             ->setParameter('task', $task)
             ->setParameter('recent', new \DateTimeImmutable('-24 hours'))
+            ->setParameter('recentlyDeleted', $recentlyDeleted)
+            ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult();
 

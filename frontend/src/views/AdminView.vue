@@ -815,6 +815,7 @@
       :duration="notification.duration"
       @close="hide"
     />
+
   </div>
 </template>
 
@@ -1420,6 +1421,7 @@ const isTaskUrgent = (dueDate?: string): boolean => {
 const isTaskOverdue = (dueDate?: string): boolean => {
   return autoAssignmentService.isTaskOverdue(dueDate)
 }
+
 
 // Lifecycle
 onMounted(async () => {
@@ -2978,4 +2980,5 @@ onMounted(async () => {
     justify-content: flex-start;
   }
 }
+
 </style>

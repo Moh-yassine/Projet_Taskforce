@@ -11,7 +11,7 @@ import UsersView from '../views/UsersView.vue'
 import ReportsView from '../views/ReportsView.vue'
 import AllTasksView from '../views/AllTasksView.vue'
 import NotificationsView from '../views/NotificationsView.vue'
-import PremiumFeaturesView from '../views/PremiumFeaturesView.vue'
+// import PremiumFeaturesView from '../views/PremiumFeaturesView.vue' // Vue supprimée
 import RoleManagement from '../components/RoleManagement.vue'
 
 const router = createRouter({
@@ -82,11 +82,12 @@ const router = createRouter({
       name: 'notifications',
       component: NotificationsView,
     },
-    {
-      path: '/premium',
-      name: 'premium',
-      component: PremiumFeaturesView,
-    },
+    // Route premium supprimée - service de paiement désactivé
+    // {
+    //   path: '/premium',
+    //   name: 'premium',
+    //   component: PremiumFeaturesView,
+    // },
   ],
 })
 

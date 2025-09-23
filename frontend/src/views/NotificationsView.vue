@@ -84,6 +84,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { authService, type User } from '@/services/authService'
+import { notificationService } from '@/services/notificationService'
 
 interface Notification {
   id: number

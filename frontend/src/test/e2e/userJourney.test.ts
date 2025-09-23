@@ -186,7 +186,7 @@ describe('User Journey E2E Tests', () => {
       expect(testRouter.currentRoute.value.name).toBe('premium')
 
       // Test que la page premium utilise les bonnes API
-      const { paymentService } = await import('../../services/paymentService')
+      // const { paymentService } = await import('../../services/paymentService') // Service supprimé
       // Les services de paiement seraient mockés ici
     })
   })

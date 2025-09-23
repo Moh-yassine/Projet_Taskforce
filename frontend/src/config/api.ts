@@ -8,7 +8,7 @@ export const API_CONFIG = {
   SKILLS_URL: 'http://127.0.0.1:8000/api/skills',
   ROLES_URL: 'http://127.0.0.1:8000/api/roles',
   NOTIFICATIONS_URL: 'http://127.0.0.1:8000/api/notifications',
-  PAYMENTS_URL: 'http://127.0.0.1:8000/api/payment',
+  // PAYMENTS_URL: 'http://127.0.0.1:8000/api/payment', // Service supprimé
   WORKLOAD_URL: 'http://127.0.0.1:8000/api/workload',
   USER_SKILLS_URL: 'http://127.0.0.1:8000/api/user-skills',
   USER_PROJECT_ROLES_URL: 'http://127.0.0.1:8000/api/user-project-roles',

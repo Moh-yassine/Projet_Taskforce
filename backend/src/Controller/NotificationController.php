@@ -23,7 +23,11 @@ final class NotificationController extends AbstractController
     #[Route('', name: 'notifications_list', methods: ['GET'])]
     public function list(): JsonResponse
     {
-        $notifications = $this->notificationRepository->findAll();
+        $notifications = $this->notificationRepository->createQueryBuilder('n')
+            ->where('n.deletedAt IS NULL')
+            ->orderBy('n.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
         
         return $this->json($notifications, 200, [], ['groups' => ['notification:read']]);
     }
@@ -36,10 +40,13 @@ final class NotificationController extends AbstractController
             return $this->json(['error' => 'Non authentifié'], 401);
         }
 
-        $notifications = $this->notificationRepository->findBy(
-            ['user' => $user], 
-            ['createdAt' => 'DESC']
-        );
+        $notifications = $this->notificationRepository->createQueryBuilder('n')
+            ->where('n.user = :user')
+            ->andWhere('n.deletedAt IS NULL')
+            ->setParameter('user', $user)
+            ->orderBy('n.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
         
         return $this->json($notifications, 200, [], ['groups' => ['notification:read']]);
     }
@@ -52,10 +59,13 @@ final class NotificationController extends AbstractController
             return $this->json(['error' => 'User not found'], 404);
         }
 
-        $notifications = $this->notificationRepository->findBy(
-            ['user' => $user], 
-            ['createdAt' => 'DESC']
-        );
+        $notifications = $this->notificationRepository->createQueryBuilder('n')
+            ->where('n.user = :user')
+            ->andWhere('n.deletedAt IS NULL')
+            ->setParameter('user', $user)
+            ->orderBy('n.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
         
         return $this->json($notifications, 200, [], ['groups' => ['notification:read']]);
     }
@@ -68,10 +78,15 @@ final class NotificationController extends AbstractController
             return $this->json(['error' => 'User not found'], 404);
         }
 
-        $notifications = $this->notificationRepository->findBy([
-            'user' => $user,
-            'isRead' => false
-        ], ['createdAt' => 'DESC']);
+        $notifications = $this->notificationRepository->createQueryBuilder('n')
+            ->where('n.user = :user')
+            ->andWhere('n.isRead = :isRead')
+            ->andWhere('n.deletedAt IS NULL')
+            ->setParameter('user', $user)
+            ->setParameter('isRead', false)
+            ->orderBy('n.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
         
         return $this->json($notifications, 200, [], ['groups' => ['notification:read']]);
     }
@@ -84,10 +99,15 @@ final class NotificationController extends AbstractController
             return $this->json(['error' => 'User not found'], 404);
         }
 
-        $count = $this->notificationRepository->count([
-            'user' => $user,
-            'isRead' => false
-        ]);
+        $count = $this->notificationRepository->createQueryBuilder('n')
+            ->select('COUNT(n.id)')
+            ->where('n.user = :user')
+            ->andWhere('n.isRead = :isRead')
+            ->andWhere('n.deletedAt IS NULL')
+            ->setParameter('user', $user)
+            ->setParameter('isRead', false)
+            ->getQuery()
+            ->getSingleScalarResult();
         
         return $this->json(['count' => $count]);
     }
@@ -199,10 +219,14 @@ final class NotificationController extends AbstractController
             return $this->json(['error' => 'User not found'], 404);
         }
 
-        $notifications = $this->notificationRepository->findBy([
-            'user' => $user,
-            'isRead' => false
-        ]);
+        $notifications = $this->notificationRepository->createQueryBuilder('n')
+            ->where('n.user = :user')
+            ->andWhere('n.isRead = :isRead')
+            ->andWhere('n.deletedAt IS NULL')
+            ->setParameter('user', $user)
+            ->setParameter('isRead', false)
+            ->getQuery()
+            ->getResult();
 
         foreach ($notifications as $notification) {
             $notification->setIsRead(true);
@@ -221,7 +245,9 @@ final class NotificationController extends AbstractController
             return $this->json(['error' => 'Notification not found'], 404);
         }
 
-        $this->entityManager->remove($notification);
+        // Soft delete : marquer comme supprimée au lieu de supprimer physiquement
+        $notification->delete();
+        $this->entityManager->persist($notification);
         $this->entityManager->flush();
 
         return $this->json(['message' => 'Notification deleted successfully']);
