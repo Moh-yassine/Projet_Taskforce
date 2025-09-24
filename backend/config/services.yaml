@@ -29,5 +29,10 @@ services:
             $stripeSecretKey: '%stripe.secret_key%'
             $stripePublicKey: '%stripe.public_key%'
 
+    # Configuration du service de logging de sécurité
+    App\Service\SecurityLogService:
+        arguments:
+            $logger: '@logger'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

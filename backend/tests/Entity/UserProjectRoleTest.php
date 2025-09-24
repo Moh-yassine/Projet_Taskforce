@@ -209,3 +209,5 @@ class UserProjectRoleTest extends TestCase
         $this->assertEquals(['edit_tasks', 'view_reports'], $array['permissions']);
     }
 }
+
+

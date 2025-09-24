@@ -11,7 +11,10 @@ import UsersView from '../views/UsersView.vue'
 import ReportsView from '../views/ReportsView.vue'
 import AllTasksView from '../views/AllTasksView.vue'
 import NotificationsView from '../views/NotificationsView.vue'
-// import PremiumFeaturesView from '../views/PremiumFeaturesView.vue' // Vue supprimée
+import PremiumFeaturesView from '../views/PremiumFeaturesView.vue'
+import PaymentView from '../views/PaymentView.vue'
+import ObserverDemoView from '../views/ObserverDemoView.vue'
+import ObserverModeView from '../views/ObserverModeView.vue'
 import RoleManagement from '../components/RoleManagement.vue'
 
 const router = createRouter({
@@ -82,12 +85,31 @@ const router = createRouter({
       name: 'notifications',
       component: NotificationsView,
     },
-    // Route premium supprimée - service de paiement désactivé
-    // {
-    //   path: '/premium',
-    //   name: 'premium',
-    //   component: PremiumFeaturesView,
-    // },
+    {
+      path: '/premium',
+      name: 'premium',
+      component: PremiumFeaturesView,
+    },
+    {
+      path: '/payment',
+      name: 'payment',
+      component: PaymentView,
+    },
+    {
+      path: '/payment/success',
+      name: 'payment-success',
+      component: PaymentView,
+    },
+    {
+      path: '/observer-demo',
+      name: 'observer-demo',
+      component: ObserverDemoView,
+    },
+    {
+      path: '/observer-mode',
+      name: 'observer-mode',
+      component: ObserverModeView,
+    },
   ],
 })
 

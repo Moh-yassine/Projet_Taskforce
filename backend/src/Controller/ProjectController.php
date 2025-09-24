@@ -220,13 +220,21 @@ class ProjectController extends AbstractController
             return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
         }
         
-        if (!$this->permissionService->canEditProject($user, $project)) {
+        // Permettre la suppression si l'utilisateur est le responsable du projet OU s'il a les permissions de gestion
+        $canDelete = $this->permissionService->canEditProject($user, $project) || 
+                     $project->getProjectManager() === $user;
+        
+        if (!$canDelete) {
             return $this->json(['message' => 'Accès non autorisé pour supprimer ce projet'], Response::HTTP_FORBIDDEN);
         }
 
-        $this->entityManager->remove($project);
-        $this->entityManager->flush();
+        try {
+            $this->entityManager->remove($project);
+            $this->entityManager->flush();
 
-        return $this->json(['message' => 'Projet supprimé avec succès']);
+            return $this->json(['message' => 'Projet supprimé avec succès']);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Erreur lors de la suppression du projet: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

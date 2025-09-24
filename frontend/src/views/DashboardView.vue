@@ -1,5 +1,6 @@
 <template>
-  <div class="dashboard-container">
+  <AuthGuard>
+    <div class="dashboard-container">
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
@@ -44,6 +45,17 @@
                 <span>Admin</span>
               </router-link>
             </li>
+            
+            <!-- Premium - Visible pour les utilisateurs avec abonnement premium -->
+            <li v-if="hasActiveSubscription" class="nav-item">
+              <router-link to="/observer-mode" class="nav-link premium-nav-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                </svg>
+                <span>Mode Observateur</span>
+                <div class="premium-nav-badge">PREMIUM</div>
+              </router-link>
+            </li>
           </ul>
           </div>
         
@@ -66,6 +78,7 @@
                 <div class="account-member-since">Membre depuis: {{ formatDate(user?.createdAt) }}</div>
           </div>
         </div>
+
           
           <!-- Bouton de déconnexion -->
           <button @click="handleLogout" class="account-logout-btn">
@@ -134,7 +147,7 @@
         </div>
 
         <!-- Section Premium -->
-        <div v-if="showWelcome" class="premium-section">
+        <div v-if="showWelcome && !hasActiveSubscription" class="premium-section">
           <div class="premium-container">
             <div class="premium-card">
               <div class="premium-background">
@@ -159,6 +172,7 @@
                     <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
                   </svg>
                 </button>
+                
               </div>
             </div>
           </div>
@@ -229,6 +243,12 @@
       @project-created="handleProjectCreated"
     />
 
+    <!-- Modal Premium -->
+    <PremiumModal 
+      :is-open="showPremiumModal" 
+      @close="closePremiumModal"
+    />
+
     <!-- Modal de confirmation de suppression -->
     <div v-if="showDeleteModal" class="delete-modal-overlay" @click="closeDeleteModal">
       <div class="delete-modal" @click.stop>
@@ -249,7 +269,8 @@
           </button>
           </div>
     </div>
-  </div>
+    </div>
+  </AuthGuard>
 </template>
 
 <script setup lang="ts">
@@ -257,14 +278,17 @@ import { onMounted, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService, type User } from '@/services/authService'
 import { projectService, type Project } from '@/services/projectService'
-// import { paymentService } from '@/services/paymentService' // Service supprimé
+import { paymentService } from '@/services/paymentService'
 import CreateProjectModal from '@/components/CreateProjectModal.vue'
 import AvatarSelector from '@/components/AvatarSelector.vue'
+import PremiumModal from '@/components/PremiumModal.vue'
+import AuthGuard from '@/components/AuthGuard.vue'
 
 const router = useRouter()
 const user = ref<User | null>(null)
 const projects = ref<Project[]>([])
 const showCreateProjectModal = ref(false)
+const showPremiumModal = ref(false)
 const hasActiveSubscription = ref(false)
 
 
@@ -296,16 +320,44 @@ const isCollaborator = computed(() => {
 })
 
 onMounted(async () => {
-  if (!authService.isAuthenticated()) {
+  // Nettoyer automatiquement les données corrompues au démarrage
+  authService.cleanupCorruptedData()
+  
+  // Vérifier si l'utilisateur a un token JWT valide
+  if (!authService.isAuthenticated() || !authService.getAuthToken()) {
+    console.log('Utilisateur non authentifié ou token manquant, redirection vers login')
     router.push('/login')
     return
   }
 
   user.value = authService.getCurrentUser()
-  await loadProjects()
-  await checkSubscriptionStatus()
   
-  // Fermer le menu profil quand on clique ailleurs
+  // Vérifier si l'utilisateur revient d'un paiement réussi
+  const urlParams = new URLSearchParams(window.location.search)
+  if (urlParams.get('premium') === 'success') {
+    console.log('🎉 Retour après paiement réussi, vérification du statut premium...')
+    // Rafraîchir le statut d'abonnement
+    await checkSubscriptionStatus()
+    
+    // Afficher un message de succès
+    console.log('🎉 Abonnement Premium activé avec succès !')
+    
+    // Nettoyer l'URL
+    window.history.replaceState({}, document.title, window.location.pathname)
+  }
+  
+  try {
+    await loadProjects()
+    await checkSubscriptionStatus()
+  } catch (error) {
+    console.error('Erreur lors du chargement des données:', error)
+    // Si erreur d'authentification, rediriger vers login
+    if (error instanceof Error && (error.message.includes('401') || error.message.includes('Non authentifié'))) {
+      console.log('Token expiré, redirection vers login')
+      authService.logout()
+      router.push('/login')
+    }
+  }
 })
 
 const handleLogout = () => {
@@ -336,19 +388,36 @@ const handleProjectCreated = async (project: any) => {
 
 
 const checkSubscriptionStatus = async () => {
-  // Statut d'abonnement désactivé - service de paiement supprimé
-  hasActiveSubscription.value = false
+  try {
+    // AuthGuard s'occupe de la vérification d'authentification
+    const config = await paymentService.getConfig()
+    hasActiveSubscription.value = config.hasActiveSubscription
+    console.log('Statut abonnement vérifié:', hasActiveSubscription.value)
+  } catch (error) {
+    console.error('Erreur lors de la vérification du statut d\'abonnement:', error)
+    
+    // Si erreur 401, rediriger vers login
+    if (error instanceof Error && (error.message.includes('401') || error.message.includes('Non authentifié'))) {
+      console.log('Token expiré ou invalide, redirection vers login')
+      authService.logout()
+      router.push('/login')
+      return
+    }
+    
+    hasActiveSubscription.value = false
+  }
 }
 
 const tryPremiumTaskforce = () => {
-  if (hasActiveSubscription.value) {
-    // Si l'utilisateur a déjà un abonnement, rediriger vers la page premium
-    router.push('/premium')
-  } else {
-    // Sinon, rediriger vers la page de paiement
-    router.push('/payment')
-  }
+  // AuthGuard s'occupe de la vérification d'authentification
+  showPremiumModal.value = true
 }
+
+
+const closePremiumModal = () => {
+  showPremiumModal.value = false
+}
+
 
 
 
@@ -662,6 +731,28 @@ const updateUserAvatar = (avatarUrl: string) => {
 .account-logout-btn svg {
   flex-shrink: 0;
 }
+
+
+/* Styles pour le lien Premium dans la navigation */
+.premium-nav-link {
+  position: relative;
+}
+
+.premium-nav-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: linear-gradient(45deg, #ffd700, #ffed4e);
+  color: #333;
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 0.2rem 0.4rem;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.4);
+  animation: premiumPulse 2s infinite;
+}
+
 
 /* Main content area */
 .main-content {
@@ -1722,6 +1813,7 @@ const updateUserAvatar = (avatarUrl: string) => {
 .premium-btn:hover svg {
   transform: translateX(3px);
 }
+
 
 @media (max-width: 768px) {
   .quick-actions-grid {

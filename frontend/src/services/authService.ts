@@ -108,15 +108,44 @@ class AuthService {
     return authData
   }
 
-  logout(): void {
-    localStorage.removeItem('authToken')
-    localStorage.removeItem('user')
-    // Nettoyer les anciens tokens fake
-    localStorage.removeItem('token')
+  async logout(): Promise<void> {
+    try {
+      // Appeler l'endpoint de déconnexion pour logger l'activité
+      await fetch(`${this.API_BASE_URL}/logout`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+      })
+    } catch (error) {
+      // Ignorer les erreurs de déconnexion (token expiré, etc.)
+      console.log('Erreur lors de la déconnexion côté serveur (normal si token expiré):', error)
+    } finally {
+      // Nettoyer le localStorage dans tous les cas
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('user')
+      // Nettoyer les anciens tokens fake
+      localStorage.removeItem('token')
+    }
   }
 
   isAuthenticated(): boolean {
-    return !!this.getAuthToken()
+    const token = this.getAuthToken()
+    const user = localStorage.getItem('user')
+    
+    // Vérifier que le token et l'utilisateur existent
+    if (!token || !user || user === 'undefined' || user === 'null') {
+      // Nettoyer automatiquement les données corrompues
+      this.cleanupCorruptedData()
+      return false
+    }
+    
+    // Vérifier que le token JWT a un format valide
+    if (!isValidJWTFormat(token)) {
+      console.warn('Token JWT invalide détecté, nettoyage automatique du localStorage')
+      this.logout().catch(() => {}) // Ignorer les erreurs de déconnexion
+      return false
+    }
+    
+    return true
   }
 
   getCurrentUser(): User | null {
@@ -135,7 +164,15 @@ class AuthService {
   }
 
   getAuthToken(): string | null {
-    return localStorage.getItem('authToken')
+    const token = localStorage.getItem('authToken')
+    
+    // Vérifier que le token existe et a un format valide
+    if (!token || !isValidJWTFormat(token)) {
+      console.warn('Token JWT invalide ou manquant')
+      return null
+    }
+    
+    return token
   }
 
   // Fonction utilitaire pour créer des headers avec authentification
@@ -147,27 +184,54 @@ class AuthService {
     }
   }
 
-  // Nettoyer les anciens tokens fake au démarrage
-  cleanupOldTokens(): void {
+  // Nettoyer automatiquement les données corrompues
+  cleanupCorruptedData(): void {
+    const userStr = localStorage.getItem('user')
+    const token = localStorage.getItem('authToken')
+    
+    // Nettoyer les données utilisateur corrompues
+    if (userStr === 'undefined' || userStr === 'null' || !userStr) {
+      localStorage.removeItem('user')
+      console.log('Données utilisateur corrompues supprimées automatiquement')
+    }
+
+    // Nettoyer les tokens invalides
+    if (token && !isValidJWTFormat(token)) {
+      localStorage.removeItem('authToken')
+      console.log('Token JWT invalide supprimé automatiquement')
+    }
+
+    // Nettoyer les anciens tokens fake
     const oldToken = localStorage.getItem('token')
     if (oldToken && oldToken.startsWith('fake-jwt-token')) {
       localStorage.removeItem('token')
-      console.log('Ancien token fake supprimé')
-    }
-
-    // Nettoyer les données utilisateur corrompues
-    const userStr = localStorage.getItem('user')
-    if (userStr === 'undefined' || userStr === 'null' || !userStr) {
-      localStorage.removeItem('user')
-      console.log('Données utilisateur corrompues supprimées')
+      console.log('Ancien token fake supprimé automatiquement')
     }
 
     // Si on a un token mais pas d'utilisateur, nettoyer tout
-    const token = localStorage.getItem('authToken')
     if (token && !userStr) {
-      console.log('Token sans utilisateur détecté - nettoyage complet')
-      this.logout()
+      console.log('Token sans utilisateur détecté - nettoyage complet automatique')
+      this.logout().catch(() => {}) // Ignorer les erreurs de déconnexion
     }
+  }
+
+  // Nettoyer les anciens tokens fake au démarrage
+  cleanupOldTokens(): void {
+    this.cleanupCorruptedData()
+  }
+
+  // Forcer un nettoyage complet et une reconnexion
+  forceReconnect(): void {
+    console.log('🔄 Forçage d\'une reconnexion complète...')
+    this.logout().catch(() => {}) // Ignorer les erreurs de déconnexion
+    
+    // Nettoyer aussi sessionStorage
+    sessionStorage.clear()
+    
+    // Rediriger vers la page de connexion
+    setTimeout(() => {
+      window.location.href = '/login'
+    }, 500)
   }
 }
 

@@ -289,8 +289,11 @@ class TaskController extends AbstractController
             return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // Seul le responsable de projet peut supprimer des tâches
-        if (!$this->permissionService->canAssignTasks($user)) {
+        // Permettre la suppression si l'utilisateur a les permissions d'assignation OU s'il est assigné à la tâche
+        $canDelete = $this->permissionService->canAssignTasks($user) || 
+                     $task->getAssignee() === $user;
+        
+        if (!$canDelete) {
             return $this->json(['message' => 'Accès non autorisé pour supprimer cette tâche'], Response::HTTP_FORBIDDEN);
         }
 
@@ -298,10 +301,10 @@ class TaskController extends AbstractController
             $this->em->remove($task);
             $this->em->flush();
             
-            return new JsonResponse(['message' => 'Tâche supprimée avec succès'], 204);
+            return new JsonResponse(['message' => 'Tâche supprimée avec succès'], 200);
             
         } catch (\Exception $e) {
-            return new JsonResponse(['error' => $e->getMessage()], 400);
+            return new JsonResponse(['error' => 'Erreur lors de la suppression de la tâche: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 

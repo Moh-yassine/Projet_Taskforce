@@ -289,3 +289,5 @@ class RoleControllerTest extends WebTestCase
         $this->entityManager = null;
     }
 }
+
+

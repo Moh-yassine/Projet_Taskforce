@@ -1,5 +1,6 @@
 <template>
-  <div class="tasks-container">
+  <AuthGuard>
+    <div class="tasks-container">
     <header class="tasks-header">
       <div class="header-content">
         <div class="header-left">
@@ -68,13 +69,15 @@
         </div>
       </div>
     </main>
-  </div>
+    </div>
+  </AuthGuard>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { authService } from '@/services/authService'
+import AuthGuard from '@/components/AuthGuard.vue'
 
 const router = useRouter()
 

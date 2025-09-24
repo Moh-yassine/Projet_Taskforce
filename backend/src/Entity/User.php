@@ -473,11 +473,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function hasActivePremiumSubscription(): bool
     {
-        foreach ($this->subscriptions as $subscription) {
-            if ($subscription->isPremium()) {
-                return true;
+        // Vérifier si la collection est chargée
+        if ($this->subscriptions->isInitialized()) {
+            foreach ($this->subscriptions as $subscription) {
+                if ($subscription->isPremium()) {
+                    return true;
+                }
             }
         }
+        
+        // Si la collection n'est pas chargée, retourner false
+        // La vérification sera faite au niveau du contrôleur
         return false;
     }
 

@@ -330,3 +330,5 @@ class UserRepositoryTest extends KernelTestCase
         $this->entityManager = null;
     }
 }
+
+

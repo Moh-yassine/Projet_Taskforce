@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\User;
 use App\Repository\UserRepository;
 use App\Service\PermissionService;
+use App\Service\SecurityLogService;
 use Doctrine\ORM\EntityManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,7 +25,8 @@ class AuthController extends AbstractController
         private UserRepository $userRepository,
         private ValidatorInterface $validator,
         private JWTTokenManagerInterface $jwtManager,
-        private PermissionService $permissionService
+        private PermissionService $permissionService,
+        private SecurityLogService $securityLogService
     ) {}
 
     #[Route('/register', name: 'app_register', methods: ['POST'])]
@@ -43,21 +45,15 @@ class AuthController extends AbstractController
             }
         }
 
-        // Validation de l'email
-        if (!filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            return $this->json(['message' => 'L\'email doit être valide'], Response::HTTP_BAD_REQUEST);
-        }
-
-        // Validation du mot de passe
-        if (strlen($data['password']) < 8) {
-            return $this->json(['message' => 'Le mot de passe doit contenir au moins 8 caractères'], Response::HTTP_BAD_REQUEST);
-        }
-
-        if (!preg_match('/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/', $data['password'])) {
-            return $this->json(['message' => 'Le mot de passe doit contenir au moins une minuscule, une majuscule, un chiffre et un caractère spécial'], Response::HTTP_BAD_REQUEST);
-        }
-
         if ($this->userRepository->emailExists($data['email'])) {
+            // Log tentative d'inscription avec email existant
+            $this->securityLogService->logFailedRegistration(
+                $data['email'],
+                $this->securityLogService->getClientIpAddress($request),
+                $this->securityLogService->getClientUserAgent($request),
+                'Email déjà utilisé'
+            );
+            
             return $this->json(['message' => 'Cet email est déjà utilisé'], Response::HTTP_CONFLICT);
         }
 
@@ -83,12 +79,15 @@ class AuthController extends AbstractController
         $this->entityManager->persist($user);
         $this->entityManager->flush();
 
-        // Générer le token JWT après l'inscription
-        $token = $this->jwtManager->create($user);
+        // Log inscription réussie
+        $this->securityLogService->logSuccessfulRegistration(
+            $user->getEmail(),
+            $this->securityLogService->getClientIpAddress($request),
+            $this->securityLogService->getClientUserAgent($request)
+        );
 
         return $this->json([
             'message' => 'Utilisateur créé avec succès',
-            'token' => $token,
             'user' => [
                 'id' => $user->getId(),
                 'email' => $user->getEmail(),
@@ -96,7 +95,6 @@ class AuthController extends AbstractController
                 'lastName' => $user->getLastName(),
                 'company' => $user->getCompany(),
                 'roles' => $user->getRoles(),
-                'permissions' => $this->permissionService->getUserPermissions($user),
                 'createdAt' => $user->getCreatedAt()->format('c'),
                 'updatedAt' => $user->getUpdatedAt()->format('c')
             ]
@@ -115,11 +113,26 @@ class AuthController extends AbstractController
         $user = $this->userRepository->findByEmail($data['email']);
 
         if (!$user || !$this->passwordHasher->isPasswordValid($user, $data['password'])) {
+            // Log tentative de connexion échouée
+            $this->securityLogService->logFailedLogin(
+                $data['email'],
+                $this->securityLogService->getClientIpAddress($request),
+                $this->securityLogService->getClientUserAgent($request),
+                !$user ? 'Utilisateur inexistant' : 'Mot de passe incorrect'
+            );
+            
             return $this->json(['message' => 'Email ou mot de passe incorrect'], Response::HTTP_UNAUTHORIZED);
         }
 
         // Générer le token JWT manuellement
         $token = $this->jwtManager->create($user);
+        
+        // Log connexion réussie
+        $this->securityLogService->logSuccessfulLogin(
+            $user->getEmail(),
+            $this->securityLogService->getClientIpAddress($request),
+            $this->securityLogService->getClientUserAgent($request)
+        );
         
         return $this->json([
             'message' => 'Connexion réussie',
@@ -159,6 +172,21 @@ class AuthController extends AbstractController
             'updatedAt' => $user->getUpdatedAt()->format('c')
         ]);
     }
+
+    #[Route('/logout', name: 'app_logout', methods: ['POST'])]
+    public function logout(Request $request): JsonResponse
+    {
+        $user = $this->getUser();
+
+        if ($user) {
+            // Log déconnexion
+            $this->securityLogService->logLogout(
+                $user->getEmail(),
+                $this->securityLogService->getClientIpAddress($request),
+                $this->securityLogService->getClientUserAgent($request)
+            );
+        }
+
+        return $this->json(['message' => 'Déconnexion réussie']);
+    }
 }
-
-

@@ -1,587 +1,564 @@
 <template>
-  <div class="premium-features">
-    <!-- Message de chargement -->
-    <div v-if="loading" class="loading-section">
-      <div class="container">
-        <div class="loading-card">
-          <div class="spinner"></div>
-          <h2>Vérification de votre abonnement...</h2>
-          <p v-if="paymentStatus === 'success'">
-            Paiement reçu ! Configuration de votre compte premium en cours...
-          </p>
-          <p v-else>Veuillez patienter pendant que nous vérifions votre statut.</p>
+  <div class="premium-features-container">
+    <!-- Header -->
+    <div class="premium-header">
+      <button @click="goBack" class="back-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Retour au dashboard
+      </button>
+      <div class="header-content">
+        <div class="premium-badge">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+          </svg>
+          <span>PREMIUM</span>
         </div>
-      </div>
-    </div>
-
-    <!-- Message d'erreur -->
-    <div v-else-if="paymentStatus === 'error'" class="error-section">
-      <div class="container">
-        <div class="error-card">
-          <h2>❌ Problème de paiement</h2>
-          <p>
-            Nous n'avons pas pu confirmer votre paiement. Veuillez réessayer ou contacter le
-            support.
-          </p>
-          <button @click="router.push('/dashboard')" class="retry-btn">Retour au dashboard</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Message d'annulation -->
-    <div v-else-if="paymentStatus === 'cancelled'" class="cancelled-section">
-      <div class="container">
-        <div class="cancelled-card">
-          <h2>⚠️ Paiement annulé</h2>
-          <p>Vous avez annulé le processus de paiement. Vous pouvez réessayer à tout moment.</p>
-          <button @click="router.push('/dashboard')" class="retry-btn">Retour au dashboard</button>
-        </div>
+        <h1>Fonctionnalités Premium</h1>
+        <p>Profitez de toutes les fonctionnalités avancées de TaskForce</p>
       </div>
     </div>
 
     <!-- Contenu principal -->
-    <div v-else>
-      <div class="hero-section">
-        <div class="container">
-          <h1 class="hero-title">🎉 Bienvenue dans TaskForce Premium !</h1>
-          <p class="hero-subtitle">
-            Vous avez maintenant accès à toutes les fonctionnalités avancées
-          </p>
-        </div>
-      </div>
-
-      <div class="features-grid">
-        <div class="container">
-          <div class="features-header">
-            <h2>Fonctionnalités Premium</h2>
-            <p>Découvrez tous les avantages de votre abonnement</p>
+    <div class="premium-content">
+      <!-- Section Paiement pour les utilisateurs non-Premium -->
+      <div class="payment-section">
+        <div class="payment-card">
+          <div class="payment-header">
+            <h2>Activez votre abonnement Premium</h2>
+            <p>Débloquez toutes les fonctionnalités avancées pour seulement 29.99€/mois</p>
           </div>
-
-          <div class="features-list">
-            <div class="feature-card">
-              <div class="feature-icon">📊</div>
-              <h3>Rapports Avancés</h3>
-              <p>
-                Analyses détaillées de vos projets avec graphiques interactifs et métriques en temps
-                réel.
-              </p>
-              <button class="feature-btn" @click="openReports">Accéder aux rapports</button>
-            </div>
-
-            <div class="feature-card">
-              <div class="feature-icon">🎯</div>
-              <h3>Projets Illimités</h3>
-              <p>Créez autant de projets que vous le souhaitez sans aucune limitation.</p>
-              <button class="feature-btn" @click="openProjects">Gérer les projets</button>
-            </div>
-
-            <div class="feature-card">
-              <div class="feature-icon">⚡</div>
-              <h3>Support Prioritaire</h3>
-              <p>Obtenez une réponse sous 24h pour toutes vos questions et problèmes.</p>
-              <button class="feature-btn" @click="openSupport">Contacter le support</button>
-            </div>
-
-            <div class="feature-card">
-              <div class="feature-icon">🎨</div>
-              <h3>Tableaux de Bord Personnalisés</h3>
-              <p>Créez des dashboards sur mesure selon vos besoins et préférences.</p>
-              <button class="feature-btn" @click="openDashboard">Personnaliser</button>
-            </div>
-
-            <div class="feature-card">
-              <div class="feature-icon">🔌</div>
-              <h3>Accès API</h3>
-              <p>Intégrez TaskForce avec vos outils existants via notre API REST complète.</p>
-              <button class="feature-btn" @click="openAPI">Documentation API</button>
-            </div>
-
-            <div class="feature-card">
-              <div class="feature-icon">🎛️</div>
-              <h3>Personnalisation Interface</h3>
-              <p>
-                Adaptez l'interface selon vos préférences avec des thèmes et layouts personnalisés.
-              </p>
-              <button class="feature-btn" @click="openSettings">Paramètres</button>
+          <div class="payment-features">
+            <div class="feature-item">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+              </svg>
+              <span>Mode Observateur - Limitez les actions de certains utilisateurs sur vos tableaux</span>
             </div>
           </div>
-        </div>
-      </div>
+          
+          <!-- Formulaire de paiement intégré -->
+          <div v-if="!showPaymentForm" class="payment-action">
+            <button @click="showPaymentForm = true" class="payment-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              Commencer l'abonnement Premium - 29.99€/mois
+            </button>
+          </div>
 
-      <div class="subscription-info">
-        <div class="container">
-          <div class="subscription-card">
-            <h3>Informations d'Abonnement</h3>
-            <div class="subscription-details" v-if="subscription">
-              <div class="detail-item">
-                <span class="label">Plan :</span>
-                <span class="value premium-badge">{{ subscription.plan.toUpperCase() }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="label">Prix :</span>
-                <span class="value">€{{ (subscription.amount / 100).toFixed(2) }}/mois</span>
-              </div>
-              <div class="detail-item">
-                <span class="label">Statut :</span>
-                <span class="value status-active">{{ subscription.status }}</span>
-              </div>
-              <div class="detail-item">
-                <span class="label">Prochaine facturation :</span>
-                <span class="value">{{ formatDate(subscription.currentPeriodEnd) }}</span>
-              </div>
+          <!-- Formulaire de paiement Stripe -->
+          <div v-if="showPaymentForm" class="stripe-payment-form">
+            <div class="payment-form-header">
+              <h3>Finaliser votre abonnement Premium</h3>
+              <p>Entrez vos informations de carte pour activer le mode observateur</p>
             </div>
-            <div class="subscription-actions">
-              <button class="btn-secondary" @click="manageSubscription">Gérer l'abonnement</button>
-              <button class="btn-danger" @click="cancelSubscription">Annuler l'abonnement</button>
+            
+            
+            <div v-if="paymentError" class="payment-error">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+              <span>{{ paymentError }}</span>
+            </div>
+            
+            <div class="payment-form">
+              <div class="payment-info">
+                <p>Vous serez redirigé vers une page de paiement sécurisée de Stripe pour finaliser votre abonnement.</p>
+                <div class="security-badges">
+                  <div class="security-badge">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+                    </svg>
+                    <span>Paiement sécurisé</span>
+                  </div>
+                  <div class="security-badge">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>SSL 256-bit</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="payment-actions">
+                <button type="button" @click="showPaymentForm = false" class="cancel-btn">
+                  Annuler
+                </button>
+                <button @click="handlePayment" :disabled="isProcessing" class="submit-btn">
+                  <span v-if="isProcessing" class="spinner-small"></span>
+                  <span v-else>Payer 29.99€/mois</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Messages de succès/erreur -->
+    <div v-if="successMessage" class="success-message">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+      </svg>
+      <span>{{ successMessage }}</span>
+    </div>
+
+    <div v-if="errorMessage" class="error-message">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+      </svg>
+      <span>{{ errorMessage }}</span>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { paymentService } from '@/services/paymentService'
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const route = useRoute()
-const subscription = ref(null)
-const loading = ref(true)
-const paymentStatus = ref('')
 
-onMounted(async () => {
-  // Vérifier les paramètres de l'URL
-  const urlParams = new URLSearchParams(window.location.search)
-  const paymentParam = urlParams.get('payment')
+// État du composant
+const showPaymentForm = ref(false)
+const paymentError = ref('')
+const isProcessing = ref(false)
+const successMessage = ref('')
+const errorMessage = ref('')
 
-  if (paymentParam === 'success') {
-    paymentStatus.value = 'success'
-    // Attendre un peu pour que Stripe traite le paiement
-    await new Promise((resolve) => setTimeout(resolve, 3000))
-  } else if (paymentParam === 'cancelled') {
-    paymentStatus.value = 'cancelled'
-  }
-
-  try {
-    // Vérifier le statut d'abonnement
-    const response = await paymentService.getSubscriptionStatus()
-    if (response.hasActiveSubscription) {
-      subscription.value = response.subscription
-      loading.value = false
-    } else {
-      // Si pas d'abonnement et pas de paramètre de paiement, rediriger vers le dashboard
-      if (!paymentParam) {
-        router.push('/dashboard')
-        return
-      }
-
-      // Si on vient d'un paiement mais pas encore d'abonnement, continuer à vérifier
-      if (paymentParam === 'success') {
-        await checkPaymentStatus()
-      } else {
-        router.push('/dashboard')
-      }
-    }
-  } catch (error) {
-    console.error("Erreur lors du chargement de l'abonnement:", error)
-    if (!paymentParam) {
-      router.push('/dashboard')
-    }
-  }
-})
-
-const checkPaymentStatus = async () => {
-  let attempts = 0
-  const maxAttempts = 10
-
-  while (attempts < maxAttempts) {
-    try {
-      const response = await paymentService.getSubscriptionStatus()
-      if (response.hasActiveSubscription) {
-        subscription.value = response.subscription
-        loading.value = false
-        return
-      }
-
-      // Attendre 2 secondes avant de réessayer
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      attempts++
-    } catch (error) {
-      console.error('Erreur lors de la vérification du statut:', error)
-      attempts++
-    }
-  }
-
-  // Si après 10 tentatives, pas d'abonnement trouvé
-  loading.value = false
-  paymentStatus.value = 'error'
-}
-
-const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
-const openReports = () => {
-  router.push('/reports')
-}
-
-const openProjects = () => {
-  router.push('/projects')
-}
-
-const openSupport = () => {
-  // Ouvrir une modal de support ou rediriger vers une page de contact
-  alert('Fonctionnalité de support en cours de développement')
-}
-
-const openDashboard = () => {
+const goBack = () => {
   router.push('/dashboard')
 }
 
-const openAPI = () => {
-  // Ouvrir la documentation API
-  window.open('/api/docs', '_blank')
-}
+const handlePayment = async () => {
+  isProcessing.value = true
+  paymentError.value = ''
 
-const openSettings = () => {
-  router.push('/settings')
-}
+  try {
+    // Pour le test, créer directement une session Stripe Checkout
+    const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer sk_test_51S5oNDRyNP7K69mNIagsNjPlXg9Ndd1101C7pRjH3mIjQIfa2UnswStmLaBlRZhzlBOJEydjQcWym6p8aVpH4kxf00mcwmHhCC',
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        'payment_method_types[]': 'card',
+        'line_items[0][price_data][currency]': 'eur',
+        'line_items[0][price_data][product_data][name]': 'TaskForce Premium',
+        'line_items[0][price_data][product_data][description]': 'Abonnement Premium TaskForce avec mode observateur',
+        'line_items[0][price_data][unit_amount]': '2999',
+        'line_items[0][price_data][recurring][interval]': 'month',
+        'line_items[0][quantity]': '1',
+        'mode': 'subscription',
+        'success_url': `${window.location.origin}/dashboard?premium=success`,
+        'cancel_url': `${window.location.origin}/premium`,
+      }),
+    })
 
-const manageSubscription = () => {
-  router.push('/payment')
-}
+    if (!response.ok) {
+      throw new Error('Erreur lors de la création de la session de paiement')
+    }
 
-const cancelSubscription = () => {
-  if (confirm('Êtes-vous sûr de vouloir annuler votre abonnement ?')) {
-    // Logique d'annulation d'abonnement
-    alert("Fonctionnalité d'annulation en cours de développement")
+    const session = await response.json()
+    
+    if (session.url) {
+      // Rediriger vers Stripe Checkout
+      window.location.href = session.url
+    } else {
+      throw new Error('URL de paiement non disponible')
+    }
+  } catch (error) {
+    console.error('Erreur lors du paiement:', error)
+    paymentError.value = error instanceof Error ? error.message : 'Erreur lors du paiement'
+    isProcessing.value = false
   }
 }
 </script>
 
 <style scoped>
-.premium-features {
+:root {
+  --deep-dark: #0D1B2A;
+  --deep-navy: #1B263B;
+  --deep-blue: #415A77;
+  --deep-light: #778DA9;
+  --deep-pale: #E0E1DD;
+  --primary-color: var(--deep-blue);
+  --primary-hover: var(--deep-navy);
+  --white: #ffffff;
+  --text-primary: var(--deep-dark);
+  --text-secondary: var(--deep-blue);
+  --success-color: #10b981;
+  --error-color: #ef4444;
+  --warning-color: #f59e0b;
+}
+
+.premium-features-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 2rem;
 }
 
-.hero-section {
-  padding: 80px 0;
-  text-align: center;
-  color: white;
+.premium-header {
+  max-width: 1200px;
+  margin: 0 auto 3rem auto;
 }
 
-.hero-title {
-  font-size: 3rem;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.hero-subtitle {
-  font-size: 1.5rem;
-  opacity: 0.9;
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--white);
+  color: var(--text-primary);
+  border: 2px solid var(--deep-light);
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
   margin-bottom: 2rem;
 }
 
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
+.back-btn:hover {
+  background: var(--deep-light);
+  color: var(--white);
+  transform: translateY(-1px);
 }
 
-.features-grid {
-  padding: 80px 0;
-  background: white;
-}
-
-.features-header {
+.header-content {
   text-align: center;
-  margin-bottom: 60px;
-}
-
-.features-header h2 {
-  font-size: 2.5rem;
-  color: #333;
-  margin-bottom: 1rem;
-}
-
-.features-header p {
-  font-size: 1.2rem;
-  color: #666;
-}
-
-.features-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 30px;
-}
-
-.feature-card {
-  background: white;
-  border-radius: 15px;
-  padding: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  transition:
-    transform 0.3s ease,
-    box-shadow 0.3s ease;
-  border: 2px solid #f0f0f0;
-}
-
-.feature-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-  border-color: #667eea;
-}
-
-.feature-icon {
-  font-size: 3rem;
-  margin-bottom: 20px;
-}
-
-.feature-card h3 {
-  font-size: 1.5rem;
-  color: #333;
-  margin-bottom: 15px;
-}
-
-.feature-card p {
-  color: #666;
-  line-height: 1.6;
-  margin-bottom: 25px;
-}
-
-.feature-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 25px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.feature-btn:hover {
-  transform: scale(1.05);
-}
-
-.subscription-info {
-  padding: 80px 0;
-  background: #f8f9fa;
-}
-
-.subscription-card {
-  background: white;
-  border-radius: 15px;
-  padding: 40px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.subscription-card h3 {
-  font-size: 2rem;
-  color: #333;
-  margin-bottom: 30px;
-  text-align: center;
-}
-
-.subscription-details {
-  margin-bottom: 30px;
-}
-
-.detail-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.detail-item:last-child {
-  border-bottom: none;
-}
-
-.label {
-  font-weight: bold;
-  color: #333;
-}
-
-.value {
-  color: #666;
 }
 
 .premium-badge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 5px 15px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: bold;
-}
-
-.status-active {
-  color: #28a745;
-  font-weight: bold;
-}
-
-.subscription-actions {
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.btn-secondary {
-  background: #6c757d;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 25px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.btn-secondary:hover {
-  background: #5a6268;
-}
-
-.btn-danger {
-  background: #dc3545;
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  border-radius: 25px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s ease;
-}
-
-.btn-danger:hover {
-  background: #c82333;
-}
-
-/* Styles pour les messages de statut */
-.loading-section,
-.error-section,
-.cancelled-section {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 2rem 1rem;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #333;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
 }
 
-.loading-card,
-.error-card,
-.cancelled-card {
-  background: white;
-  border-radius: 20px;
-  padding: 3rem;
-  text-align: center;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
-  width: 100%;
-}
-
-.loading-card h2,
-.error-card h2,
-.cancelled-card h2 {
-  font-size: 2rem;
-  margin-bottom: 1rem;
+.premium-badge svg {
   color: #333;
 }
 
-.loading-card p,
-.error-card p,
-.cancelled-card p {
-  font-size: 1.2rem;
-  color: #666;
-  margin-bottom: 2rem;
-  line-height: 1.6;
+.header-content h1 {
+  color: var(--text-primary);
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0 0 1rem 0;
 }
 
-.spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #667eea;
+.header-content p {
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  margin: 0;
+}
+
+.premium-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Section de paiement */
+.payment-section {
+  margin-bottom: 3rem;
+}
+
+.payment-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 16px;
+  padding: 2.5rem;
+  text-align: center;
+  border: 2px solid var(--deep-light);
+  box-shadow: 0 10px 30px rgba(65, 90, 119, 0.1);
+}
+
+.payment-header h2 {
+  color: var(--text-primary);
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+}
+
+.payment-header p {
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  margin: 0 0 2rem 0;
+}
+
+.payment-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--white);
+  border-radius: 8px;
+  border: 1px solid var(--deep-light);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.feature-item svg {
+  color: var(--success-color);
+  flex-shrink: 0;
+}
+
+.payment-btn {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  color: var(--white);
+  border: none;
+  border-radius: 12px;
+  padding: 1.25rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(65, 90, 119, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 auto;
+}
+
+.payment-btn:hover {
+  background: linear-gradient(135deg, var(--primary-hover), var(--deep-navy));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(65, 90, 119, 0.4);
+}
+
+.payment-btn svg {
+  color: #ffd700;
+}
+
+/* Formulaire de paiement intégré */
+.payment-action {
+  margin-top: 2rem;
+}
+
+.stripe-payment-form {
+  margin-top: 2rem;
+  padding: 2rem;
+  background: var(--white);
+  border-radius: 12px;
+  border: 2px solid var(--deep-light);
+}
+
+.payment-form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.payment-form-header h3 {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.payment-form-header p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+
+.payment-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.payment-error svg {
+  flex-shrink: 0;
+}
+
+.payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.payment-info {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.payment-info p {
+  color: var(--text-secondary);
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+.security-badges {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.security-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--white);
+  border-radius: 20px;
+  border: 1px solid var(--deep-light);
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+.security-badge svg {
+  color: var(--success-color);
+}
+
+
+.payment-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.cancel-btn {
+  background: var(--deep-light);
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.cancel-btn:hover {
+  background: #6b7280;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+  color: var(--white);
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--primary-hover), var(--deep-navy));
+  transform: translateY(-1px);
+}
+
+.submit-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.spinner-small {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0 auto 2rem;
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+
+.success-message,
+.error-message {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: slideIn 0.3s ease;
+}
+
+.success-message {
+  background: var(--success-color);
+  color: var(--white);
+}
+
+.error-message {
+  background: var(--error-color);
+  color: var(--white);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
   }
-  100% {
-    transform: rotate(360deg);
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 
-.retry-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 15px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.retry-btn:hover {
-  transform: translateY(-2px);
-}
-
-.error-card {
-  border-left: 5px solid #dc3545;
-}
-
-.cancelled-card {
-  border-left: 5px solid #ffc107;
-}
-
+/* Responsive */
 @media (max-width: 768px) {
-  .hero-title {
+  .premium-features-container {
+    padding: 1rem;
+  }
+  
+  .premium-header {
+    margin-bottom: 2rem;
+  }
+  
+  .header-content h1 {
     font-size: 2rem;
   }
-
-  .hero-subtitle {
-    font-size: 1.2rem;
+  
+  .payment-card {
+    padding: 1.5rem;
   }
+}
 
-  .features-list {
-    grid-template-columns: 1fr;
-  }
-
-  .subscription-actions {
-    flex-direction: column;
-  }
-
-  .loading-card,
-  .error-card,
-  .cancelled-card {
-    padding: 2rem;
-  }
-
-  .loading-card h2,
-  .error-card h2,
-  .cancelled-card h2 {
+@media (max-width: 480px) {
+  .header-content h1 {
     font-size: 1.5rem;
+  }
+  
+  .payment-card {
+    padding: 1rem;
   }
 }
 </style>

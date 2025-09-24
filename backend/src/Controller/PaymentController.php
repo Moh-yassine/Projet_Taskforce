@@ -34,6 +34,12 @@ class PaymentController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
+        // Vérifier directement dans la base de données
+        $subscription = $this->entityManager->getRepository(\App\Entity\Subscription::class)
+            ->findOneBy(['user' => $user, 'status' => 'active', 'plan' => 'premium']);
+
+        $hasActiveSubscription = $subscription !== null;
+
         return new JsonResponse([
             'publishableKey' => $this->stripeService->getPublicKey(),
             'user' => [
@@ -41,7 +47,7 @@ class PaymentController extends AbstractController
                 'email' => $user->getEmail(),
                 'name' => $user->getFullName(),
             ],
-            'hasActiveSubscription' => $user->hasActivePremiumSubscription(),
+            'hasActiveSubscription' => $hasActiveSubscription,
         ]);
     }
 
@@ -52,31 +58,24 @@ class PaymentController extends AbstractController
         $user = $this->getUser();
 
         // Check if user already has an active premium subscription
-        if ($user->hasActivePremiumSubscription()) {
+        $existingSubscription = $this->entityManager->getRepository(\App\Entity\Subscription::class)
+            ->findOneBy(['user' => $user, 'status' => 'active', 'plan' => 'premium']);
+            
+        if ($existingSubscription) {
             return new JsonResponse([
                 'success' => false,
                 'error' => 'Vous avez déjà un abonnement premium actif.',
             ], 400);
         }
 
-        $data = json_decode($request->getContent(), true);
-        
-        if (!isset($data['paymentMethodId'])) {
-            return new JsonResponse([
-                'success' => false,
-                'error' => 'Méthode de paiement requise.',
-            ], 400);
-        }
-
         try {
-            $result = $this->stripeService->createPremiumSubscription($user, $data['paymentMethodId']);
+            // Créer une session Stripe Checkout
+            $result = $this->stripeService->createCheckoutSession($user);
 
             if ($result['success']) {
                 return new JsonResponse([
                     'success' => true,
-                    'subscription_id' => $result['subscription_id'],
-                    'client_secret' => $result['client_secret'],
-                    'status' => $result['status'],
+                    'checkout_url' => $result['checkout_url'],
                 ]);
             } else {
                 return new JsonResponse([
@@ -88,7 +87,6 @@ class PaymentController extends AbstractController
             return new JsonResponse([
                 'success' => false,
                 'error' => 'Erreur serveur: ' . $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ], 500);
         }
     }
@@ -174,13 +172,18 @@ class PaymentController extends AbstractController
         }
     }
 
+
     #[Route('/premium-features', name: 'premium_features', methods: ['GET'])]
     public function getPremiumFeatures(): JsonResponse
     {
         /** @var User $user */
         $user = $this->getUser();
 
-        if (!$user->hasActivePremiumSubscription()) {
+        // Vérifier directement dans la base de données
+        $subscription = $this->entityManager->getRepository(\App\Entity\Subscription::class)
+            ->findOneBy(['user' => $user, 'status' => 'active', 'plan' => 'premium']);
+
+        if (!$subscription) {
             return new JsonResponse([
                 'success' => false,
                 'error' => 'Abonnement premium requis pour accéder à ces fonctionnalités.',
@@ -219,6 +222,11 @@ class PaymentController extends AbstractController
                 'custom_branding' => [
                     'name' => 'Personnalisation',
                     'description' => 'Personnalisation de l\'interface avec votre marque',
+                    'enabled' => true,
+                ],
+                'observer_mode' => [
+                    'name' => 'Mode Observateur',
+                    'description' => 'Limitez les actions de certains utilisateurs sur vos tableaux',
                     'enabled' => true,
                 ],
             ],

@@ -12,6 +12,7 @@ use Stripe\Subscription as StripeSubscription;
 use Stripe\Price;
 use Stripe\Product;
 use Stripe\PaymentIntent;
+use Stripe\Checkout\Session;
 use Stripe\Exception\ApiErrorException;
 
 class StripeService
@@ -24,13 +25,15 @@ class StripeService
     public function __construct(
         EntityManagerInterface $entityManager,
         SubscriptionRepository $subscriptionRepository,
-        string $stripeSecretKey,
-        string $stripePublicKey
+        string $stripeSecretKey = null,
+        string $stripePublicKey = null
     ) {
         $this->entityManager = $entityManager;
         $this->subscriptionRepository = $subscriptionRepository;
-        $this->stripeSecretKey = $stripeSecretKey;
-        $this->stripePublicKey = $stripePublicKey;
+        
+        // Utiliser vos clés Stripe directement pour le test
+        $this->stripeSecretKey = $stripeSecretKey ?: 'sk_test_51S5oNDRyNP7K69mNIagsNjPlXg9Ndd1101C7pRjH3mIjQIfa2UnswStmLaBlRZhzlBOJEydjQcWym6p8aVpH4kxf00mcwmHhCC';
+        $this->stripePublicKey = $stripePublicKey ?: 'pk_test_51S5oNDRyNP7K69mNAktlFsF76GumOdNPlggTFso5XPKeLbRB842U6wysSFXJlSLPnQJCW65RpOv5wc3jl8ULElT000mLHgVg1T';
         
         Stripe::setApiKey($this->stripeSecretKey);
     }
@@ -167,7 +170,7 @@ class StripeService
             // Create new product
             return Product::create([
                 'name' => 'TaskForce Premium',
-                'description' => 'Accès aux fonctionnalités premium de TaskForce',
+                'description' => 'Accès aux fonctionnalités premium de TaskForce avec mode observateur',
                 'type' => 'service',
             ]);
         } catch (ApiErrorException $e) {
@@ -279,6 +282,54 @@ class StripeService
                 $subscription->setStatus('past_due');
                 $this->entityManager->flush();
             }
+        }
+    }
+
+    /**
+     * Create a Stripe Checkout session for premium subscription
+     */
+    public function createCheckoutSession(User $user): array
+    {
+        try {
+            // Create or get customer
+            $customer = $this->createOrGetCustomer($user);
+
+            // Create checkout session
+            $session = Session::create([
+                'customer' => $customer->id,
+                'payment_method_types' => ['card'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'eur',
+                        'product_data' => [
+                            'name' => 'TaskForce Premium',
+                            'description' => 'Abonnement Premium TaskForce avec fonctionnalités avancées et mode observateur',
+                        ],
+                        'unit_amount' => 2999, // 29.99€ en centimes
+                        'recurring' => [
+                            'interval' => 'month',
+                        ],
+                    ],
+                    'quantity' => 1,
+                ]],
+                'mode' => 'subscription',
+                'success_url' => 'http://localhost:5173/dashboard?premium=success',
+                'cancel_url' => 'http://localhost:5173/payment?cancelled=true',
+                'metadata' => [
+                    'user_id' => $user->getId(),
+                ],
+            ]);
+
+            return [
+                'success' => true,
+                'checkout_url' => $session->url,
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => 'Erreur lors de la création de la session de paiement: ' . $e->getMessage(),
+            ];
         }
     }
 

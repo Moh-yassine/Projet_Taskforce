@@ -350,3 +350,5 @@ class CompleteEntityTest extends TestCase
         $this->assertInstanceOf(\DateTime::class, $subscription->getCancelledAt());
     }
 }
+
+
