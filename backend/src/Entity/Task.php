@@ -73,6 +73,15 @@ class Task
     #[Groups(['task:read', 'task:write'])]
     private Collection $skills;
 
+    #[ORM\ManyToOne(targetEntity: Column::class, inversedBy: 'tasks')]
+    #[ORM\JoinColumn(nullable: true)]
+    #[Groups(['task:read', 'task:write'])]
+    private ?Column $column = null;
+
+    #[ORM\Column(type: 'integer', options: ['default' => 0])]
+    #[Groups(['task:read', 'task:write'])]
+    private ?int $position = 0;
+
     public function __construct()
     {
         $this->createdAt = new \DateTime();
@@ -237,6 +246,28 @@ class Task
     public function setIsAutoAssigned(bool $isAutoAssigned): static
     {
         $this->isAutoAssigned = $isAutoAssigned;
+        return $this;
+    }
+
+    public function getColumn(): ?Column
+    {
+        return $this->column;
+    }
+
+    public function setColumn(?Column $column): static
+    {
+        $this->column = $column;
+        return $this;
+    }
+
+    public function getPosition(): ?int
+    {
+        return $this->position;
+    }
+
+    public function setPosition(int $position): static
+    {
+        $this->position = $position;
         return $this;
     }
 }

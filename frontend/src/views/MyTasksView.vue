@@ -50,47 +50,46 @@
                 <span>Admin</span>
               </router-link>
             </li>
+            <!-- Mode Observateur Premium -->
+            <li v-if="hasActiveSubscription" class="nav-item">
+              <router-link to="/observer-mode" class="nav-link premium-nav-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                </svg>
+                <span>Mode Observateur</span>
+                <div class="premium-nav-badge">PREMIUM</div>
+              </router-link>
+            </li>
           </ul>
         </div>
 
-        <!-- Section Compte -->
-        <div class="nav-section account-section">
-          <h3 class="nav-title">Compte</h3>
-
-          <!-- Informations du compte -->
-          <div class="account-info">
-            <div class="account-avatar-container">
-              <AvatarSelector
-                :model-value="user?.avatar"
-                @update:model-value="updateUserAvatar"
-                class="account-avatar-selector"
-              />
-            </div>
-            <div class="account-details">
-              <div class="account-name">{{ user?.firstName }} {{ user?.lastName }}</div>
-              <div class="account-email">{{ user?.email }}</div>
-              <div class="account-member-since">
-                Membre depuis: {{ user?.createdAt ? formatDate(user.createdAt) : 'N/A' }}
-              </div>
-            </div>
-          </div>
-
-          <!-- Bouton de déconnexion -->
-          <button @click="handleLogout" class="account-logout-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path
-                d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"
-              />
-            </svg>
-            <span>Se déconnecter</span>
-          </button>
+        <div class="nav-section">
+          <h3 class="nav-title">Actions</h3>
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="#" class="nav-link" @click.prevent="logout">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path
+                    d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"
+                  />
+                </svg>
+                <span>Déconnexion</span>
+              </a>
+            </li>
+          </ul>
         </div>
       </nav>
     </aside>
 
     <!-- Main content area -->
     <div class="main-content">
+      <div class="tasks-header">
+        <h1>Mes tâches</h1>
+        <p>Consultez et gérez vos tâches assignées</p>
+      </div>
+
       <div v-if="isLoading" class="loading">
+        <div class="loading-spinner"></div>
         <p>Chargement de vos tâches...</p>
       </div>
 
@@ -118,7 +117,7 @@
         <div class="filters-section">
           <div class="filter-group">
             <label>Projet:</label>
-            <select v-model="selectedProject" @change="loadTasksForProject">
+            <select v-model="selectedProject" @change="filterTasks">
               <option value="">Tous les projets</option>
               <option v-for="project in projects" :key="project.id" :value="project.id">
                 {{ project.name }}
@@ -193,69 +192,37 @@
                   {{ skill.name }}
                 </span>
               </div>
-            </div>
 
-            <div class="task-details">
-              <div class="task-meta">
-                <span class="task-status" :class="`status-${task.status}`">
-                  {{ getStatusLabel(task.status) }}
-                </span>
-                <span class="task-priority" :class="`priority-${task.priority}`">
-                  {{ getPriorityLabel(task.priority) }}
-                </span>
-              </div>
-
+              <!-- Informations de la tâche -->
               <div class="task-info">
-                <div v-if="task.project" class="task-project">
-                  <strong>Projet:</strong> {{ task.project.name }}
-                </div>
-                <div v-if="task.assignee" class="task-assignee">
-                  <strong>Assigné à:</strong> {{ task.assignee.firstName }}
-                  {{ task.assignee.lastName }}
+                <div class="task-meta">
+                  <span class="task-status" :class="`status-${task.status}`">
+                    {{ getStatusLabel(task.status) }}
+                  </span>
+                  <span class="task-priority" :class="`priority-${task.priority}`">
+                    {{ getPriorityLabel(task.priority) }}
+                  </span>
                 </div>
                 <div class="task-dates">
-                  <span v-if="task.createdAt">
-                    <strong>Créé le:</strong> {{ formatDate(task.createdAt) }}
-                  </span>
-                  <span v-if="task.updatedAt && task.updatedAt !== task.createdAt">
-                    <strong>Modifié le:</strong> {{ formatDate(task.updatedAt) }}
+                  <span v-if="task.dueDate" class="task-due-date">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                    </svg>
+                    Échéance: {{ formatDate(task.dueDate) }}
                   </span>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Task Modal -->
-      <TaskModal
-        v-if="showTaskModal"
-        :task="selectedTask"
-        @close="closeTaskModal"
-        @save="handleTaskSave"
-      />
-
-      <!-- Modal de confirmation de suppression -->
-      <div v-if="showDeleteModal" class="delete-modal-overlay" @click="closeDeleteModal">
-        <div class="delete-modal" @click.stop>
-          <div class="delete-modal-header">
-            <h3>Supprimer la tâche</h3>
-            <button @click="closeDeleteModal" class="close-btn">×</button>
-          </div>
-          <div class="delete-modal-content">
-            <div class="warning-icon">⚠️</div>
-            <p>
-              Êtes-vous sûr de vouloir supprimer la tâche
-              <strong>"{{ taskToDelete?.title }}"</strong> ?
-            </p>
-            <p class="warning-text">Cette action est irréversible.</p>
-          </div>
-          <div class="delete-modal-actions">
-            <button @click="closeDeleteModal" class="btn btn-secondary">Annuler</button>
-            <button @click="confirmDeleteTask" class="btn btn-danger" :disabled="isDeleting">
-              <span v-if="isDeleting">Suppression...</span>
-              <span v-else>Supprimer</span>
-            </button>
+            <!-- Projet -->
+            <div class="task-project">
+              <div class="project-info">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M10 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/>
+                </svg>
+                <span>{{ getProjectName(task.project?.id) }}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -264,93 +231,70 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { authService } from '@/services/authService'
 import { taskService } from '@/services/taskService'
-import { authService, type User } from '@/services/authService'
-import AvatarSelector from '@/components/AvatarSelector.vue'
 import { projectService } from '@/services/projectService'
-import TaskModal from '../components/task/TaskModal.vue'
-
-interface Task {
-  id: number
-  title: string
-  description: string
-  status: 'todo' | 'in_progress' | 'completed'
-  priority: 'low' | 'medium' | 'high' | 'urgent'
-  createdAt: string
-  updatedAt: string
-  project?: {
-    id: number
-    name: string
-  }
-  assignee?: {
-    id: number
-    firstName: string
-    lastName: string
-  }
-  skills: Array<{
-    id: number
-    name: string
-  }>
-}
-
-interface Project {
-  id: number
-  name: string
-  description: string
-  status: string
-  createdAt: string
-}
+import { paymentService } from '@/services/paymentService'
 
 const router = useRouter()
-const tasks = ref<Task[]>([])
-const projects = ref<Project[]>([])
+
+// État réactif
 const isLoading = ref(false)
+const tasks = ref<any[]>([])
+const projects = ref<any[]>([])
+const hasActiveSubscription = ref(false)
+
+// Filtres
 const selectedProject = ref('')
 const selectedStatus = ref('')
 const selectedPriority = ref('')
-const showTaskModal = ref(false)
-const selectedTask = ref<Task | null>(null)
-const showDeleteModal = ref(false)
-const taskToDelete = ref<Task | null>(null)
-const isDeleting = ref(false)
-const user = ref<User | null>(null)
 
+// Computed properties
 const canManageProjects = computed(() => {
-  return user.value?.permissions?.canManageProjects || false
+  const user = authService.getCurrentUser()
+  return user?.roles?.includes('ROLE_PROJECT_MANAGER') || false
 })
 
 const canAccessAdmin = computed(() => {
-  return user.value?.permissions?.canAccessAdmin || false
+  const user = authService.getCurrentUser()
+  return user?.roles?.includes('ROLE_PROJECT_MANAGER') || user?.roles?.includes('ROLE_MANAGER')
 })
 
 const canDeleteTasks = computed(() => {
-  return user.value?.permissions?.canManageProjects || false
+  const user = authService.getCurrentUser()
+  return user?.roles?.includes('ROLE_PROJECT_MANAGER') || false
 })
 
-// Computed
 const filteredTasks = computed(() => {
   let filtered = tasks.value
 
   if (selectedProject.value) {
-    filtered = filtered.filter((task) => task.project?.id === parseInt(selectedProject.value))
+    filtered = filtered.filter(task => task.project?.id === parseInt(selectedProject.value))
   }
 
   if (selectedStatus.value) {
-    filtered = filtered.filter((task) => task.status === selectedStatus.value)
+    filtered = filtered.filter(task => task.status === selectedStatus.value)
   }
 
   if (selectedPriority.value) {
-    filtered = filtered.filter((task) => task.priority === selectedPriority.value)
+    filtered = filtered.filter(task => task.priority === selectedPriority.value)
   }
 
   return filtered
 })
 
 // Méthodes
-const goBack = () => {
-  router.push('/dashboard')
+const loadTasks = async () => {
+  try {
+    isLoading.value = true
+    tasks.value = await taskService.getAllTasks()
+  } catch (error) {
+    console.error('Erreur lors du chargement des tâches:', error)
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const loadProjects = async () => {
@@ -361,33 +305,13 @@ const loadProjects = async () => {
   }
 }
 
-const loadTasksForProject = () => {
-  // Le filtrage est géré par le computed filteredTasks
-  // Pas besoin de recharger les données, juste filtrer
-}
-
-const loadAllTasks = async () => {
-  isLoading.value = true
+const checkSubscriptionStatus = async () => {
   try {
-    // Charger uniquement les tâches assignées à l'utilisateur connecté
-    const { userService } = await import('@/services/userService')
-    const myTasks = await userService.getMyTasks()
-    tasks.value = myTasks
-
-    // Charger les projets pour le filtre (uniquement les projets des tâches assignées)
-    const uniqueProjects = new Map()
-    myTasks.forEach((task) => {
-      if (task.project) {
-        uniqueProjects.set(task.project.id, task.project)
-      }
-    })
-    projects.value = Array.from(uniqueProjects.values())
+    const config = await paymentService.getConfig()
+    hasActiveSubscription.value = config.hasActiveSubscription
   } catch (error) {
-    console.error('Erreur lors du chargement de mes tâches:', error)
-    tasks.value = []
-    projects.value = []
-  } finally {
-    isLoading.value = false
+    console.error('Erreur lors de la vérification du statut d\'abonnement:', error)
+    hasActiveSubscription.value = false
   }
 }
 
@@ -395,177 +319,120 @@ const filterTasks = () => {
   // Le filtrage est géré par le computed filteredTasks
 }
 
-const editTask = (task: Task) => {
-  selectedTask.value = task
-  showTaskModal.value = true
-}
-
-const deleteTask = (task: Task) => {
-  taskToDelete.value = task
-  showDeleteModal.value = true
-}
-
-const confirmDeleteTask = async () => {
-  if (!taskToDelete.value) return
-
-  isDeleting.value = true
-  try {
-    await taskService.deleteTask(taskToDelete.value.id)
-    tasks.value = tasks.value.filter((t) => t.id !== taskToDelete.value!.id)
-    closeDeleteModal()
-    console.log('Tâche supprimée avec succès')
-  } catch (error) {
-    console.error('Erreur lors de la suppression:', error)
-    alert('Erreur lors de la suppression de la tâche. Veuillez réessayer.')
-  } finally {
-    isDeleting.value = false
-  }
-}
-
-const closeDeleteModal = () => {
-  showDeleteModal.value = false
-  taskToDelete.value = null
-}
-
-const closeTaskModal = () => {
-  showTaskModal.value = false
-  selectedTask.value = null
-}
-
-const handleTaskSave = async (taskData: any) => {
-  try {
-    if (selectedTask.value) {
-      // Mise à jour
-      const updatedTask = await taskService.updateTask(selectedTask.value.id, taskData)
-      const index = tasks.value.findIndex((t) => t.id === selectedTask.value!.id)
-      if (index !== -1) {
-        tasks.value[index] = updatedTask
-      }
-    }
-    closeTaskModal()
-  } catch (error) {
-    console.error('Erreur lors de la sauvegarde:', error)
-  }
-}
-
-const getStatusLabel = (status: string) => {
+const getStatusLabel = (status: string): string => {
   const labels: Record<string, string> = {
-    todo: 'À faire',
-    in_progress: 'En cours',
-    completed: 'Terminé',
+    'todo': 'À faire',
+    'in_progress': 'En cours',
+    'completed': 'Terminé'
   }
   return labels[status] || status
 }
 
-const getPriorityLabel = (priority: string) => {
+const getPriorityLabel = (priority: string): string => {
   const labels: Record<string, string> = {
-    low: 'Faible',
-    medium: 'Moyenne',
-    high: 'Élevée',
-    urgent: 'Urgente',
+    'low': 'Faible',
+    'medium': 'Moyenne',
+    'high': 'Élevée',
+    'urgent': 'Urgente'
   }
   return labels[priority] || priority
 }
 
-const formatDate = (dateString: string) => {
-  if (!dateString) return ''
-  const date = new Date(dateString)
-  return date.toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+const getProjectName = (projectId: number): string => {
+  const project = projects.value.find(p => p.id === projectId)
+  return project?.name || 'Projet inconnu'
 }
 
-// Fonctions manquantes
+const formatDate = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString('fr-FR')
+}
+
+const editTask = (task: any) => {
+  // Rediriger vers le projet pour éditer la tâche
+  router.push(`/project/${task.project?.id}/tasks`)
+}
+
+const deleteTask = async (task: any) => {
+  if (!confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) return
+  
+  try {
+    await taskService.deleteTask(task.id)
+    tasks.value = tasks.value.filter(t => t.id !== task.id)
+  } catch (error) {
+    console.error('Erreur lors de la suppression de la tâche:', error)
+    alert('Erreur lors de la suppression de la tâche')
+  }
+}
+
 const goToProjects = () => {
   router.push('/dashboard')
 }
 
-const updateUserAvatar = (newAvatar: string) => {
-  if (user.value) {
-    user.value.avatar = newAvatar
-    // Optionnel: sauvegarder en base de données
-  }
-}
-
-const handleLogout = () => {
-  authService.logout()
-  router.push('/login')
-}
-
-// Initialisation
-onMounted(async () => {
-  // Vérifier l'authentification
-  if (!authService.isAuthenticated()) {
+const logout = async () => {
+  try {
+    await authService.logout()
     router.push('/login')
-    return
+  } catch (error) {
+    console.error('Erreur lors de la déconnexion:', error)
   }
+}
 
-  // Charger les informations utilisateur
-  const userData = authService.getCurrentUser()
-  if (userData) {
-    user.value = userData
-  }
-
-  await loadProjects()
-  await loadAllTasks()
+// Lifecycle
+onMounted(async () => {
+  await Promise.all([
+    loadTasks(),
+    loadProjects(),
+    checkSubscriptionStatus()
+  ])
 })
 </script>
 
 <style scoped>
 .my-tasks-container {
-  min-height: 100vh;
-  background: var(--background-light);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   display: flex;
-  padding-top: 0;
+  min-height: 100vh;
+  background: #f8fafc;
 }
 
 /* Sidebar */
 .sidebar {
   width: 280px;
-  background: var(--deep-navy);
-  color: var(--white);
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  z-index: 200;
-  overflow-y: auto;
-  border-right: 1px solid var(--deep-dark);
+  background: #1e293b;
+  color: white;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebar-header {
-  padding: 1.5rem 1rem;
-  border-bottom: 1px solid var(--deep-dark);
+  padding: 24px 20px;
+  border-bottom: 1px solid #334155;
 }
 
 .sidebar-header h2 {
-  color: var(--white);
-  font-size: 1.5rem;
-  font-weight: 700;
   margin: 0;
-  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #f1f5f9;
 }
 
 .sidebar-nav {
-  padding: 1rem 0;
+  flex: 1;
+  padding: 20px 0;
 }
 
 .nav-section {
-  margin-bottom: 2rem;
+  margin-bottom: 32px;
 }
 
 .nav-title {
-  color: var(--deep-light);
-  font-size: 0.75rem;
+  font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0 0 0.75rem 1rem;
+  letter-spacing: 1px;
+  color: #94a3b8;
+  margin: 0 0 12px 0;
+  padding: 0 20px;
 }
 
 .nav-list {
@@ -581,598 +448,364 @@ onMounted(async () => {
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  color: var(--deep-light);
+  gap: 12px;
+  padding: 12px 20px;
+  color: #cbd5e1;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
   border-left: 3px solid transparent;
 }
 
 .nav-link:hover {
-  background: var(--deep-dark);
-  color: var(--white);
+  background: #334155;
+  color: #f1f5f9;
 }
 
 .nav-item.active .nav-link {
-  background: var(--deep-dark);
-  color: var(--white);
-  border-left-color: var(--primary-color);
+  background: #3b82f6;
+  color: white;
+  border-left-color: #60a5fa;
 }
 
-.nav-link svg {
-  flex-shrink: 0;
+.nav-link span {
+  font-weight: 500;
 }
 
-/* Section Compte */
-.account-section {
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid var(--deep-dark);
-}
-
-.account-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  background: var(--deep-dark);
-  border-radius: 8px;
-  margin-left: 1rem;
-  margin-right: 1rem;
-}
-
-.account-avatar-container {
-  display: flex;
-  justify-content: center;
-  width: 100%;
-}
-
-.account-details {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  width: 100%;
-}
-
-.account-name {
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--white);
-  margin-bottom: 0.25rem;
-  word-wrap: break-word;
-  line-height: 1.2;
-}
-
-.account-email {
-  font-size: 0.75rem;
-  color: var(--deep-light);
-  margin-bottom: 0.25rem;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  line-height: 1.2;
-}
-
-.account-member-since {
-  font-size: 0.7rem;
-  color: var(--deep-light);
-  word-wrap: break-word;
-  line-height: 1.2;
-}
-
-.account-logout-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: calc(100% - 2rem);
-  padding: 0.75rem 1rem;
-  margin: 0.5rem 1rem;
-  background: var(--danger-color);
-  color: var(--white);
-  border: none;
-  border-radius: 8px;
-  font-size: 0.875rem;
+/* Premium nav link */
+.premium-nav-link {
+  position: relative;
+  background: linear-gradient(135deg, #ffd700, #ffed4e);
+  color: #333 !important;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.account-logout-btn:hover {
-  background: #c82333;
+.premium-nav-link:hover {
+  background: linear-gradient(135deg, #ffed4e, #ffd700);
   transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
 }
 
-.account-logout-btn svg {
-  flex-shrink: 0;
+.premium-nav-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff6b6b;
+  color: white;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(255, 107, 107, 0.3);
 }
 
-/* Main content area */
+/* Main content */
 .main-content {
   flex: 1;
-  margin-left: 280px;
-  min-height: 100vh;
-  padding: 2rem;
+  padding: 40px;
+  overflow-y: auto;
 }
 
-.loading,
+.tasks-header {
+  margin-bottom: 32px;
+}
+
+.tasks-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.tasks-header p {
+  margin: 0;
+  font-size: 16px;
+  color: #64748b;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  color: #64748b;
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .no-tasks {
-  text-align: center;
-  padding: 3rem;
-  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
 }
 
 .no-tasks-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+  text-align: center;
+  color: #64748b;
 }
 
 .no-tasks-content svg {
-  opacity: 0.5;
+  color: #cbd5e1;
+  margin-bottom: 16px;
 }
 
-.tasks-content {
-  max-width: 1200px;
-  margin: 0 auto;
+.no-tasks-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
 }
 
+.no-tasks-content p {
+  margin: 0;
+  font-size: 16px;
+}
+
+/* Filtres */
 .filters-section {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 32px;
+  padding: 24px;
   background: white;
-  padding: 1.5rem;
   border-radius: 12px;
-  margin-bottom: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  align-items: end;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .filter-group label {
-  font-weight: 600;
-  color: #333;
-  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+  font-size: 14px;
 }
 
 .filter-group select {
-  padding: 0.5rem;
-  border: 1px solid #ddd;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
-  font-size: 0.9rem;
+  font-size: 14px;
+  background: white;
   min-width: 150px;
 }
 
+.filter-group select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Liste des tâches */
 .tasks-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 16px;
 }
 
 .task-item {
   background: white;
   border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s;
 }
 
 .task-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.task-main {
+  margin-bottom: 16px;
 }
 
 .task-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1rem;
+  margin-bottom: 12px;
 }
 
 .task-title {
-  font-size: 1.3rem;
-  font-weight: 600;
-  color: #333;
   margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1.4;
 }
 
 .task-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .action-btn {
   background: none;
   border: none;
+  color: #64748b;
   cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 6px;
-  transition: background 0.2s;
-  color: #666;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
 }
 
 .action-btn:hover {
-  background: #f8f9fa;
+  color: #3b82f6;
+  background: #eff6ff;
 }
 
 .task-description {
-  color: #666;
+  margin: 0 0 16px 0;
+  color: #64748b;
   line-height: 1.5;
-  margin: 0 0 1rem 0;
 }
 
 .task-skills {
-  margin: 0.5rem 0 1rem 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
-.task-skills .skill-tag {
-  background: #e3f2fd;
-  color: #1976d2;
-  padding: 0.25rem 0.75rem;
-  border-radius: 16px;
-  font-size: 0.8rem;
+.skill-tag {
+  background: #eff6ff;
+  color: #1e40af;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
   font-weight: 500;
-  border: 1px solid #bbdefb;
-  transition: all 0.2s ease;
 }
 
-.task-skills .skill-tag:hover {
-  background: #bbdefb;
-  transform: translateY(-1px);
-}
-
-.task-details {
-  border-top: 1px solid #f0f0f0;
-  padding-top: 1rem;
+.task-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .task-meta {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 12px;
 }
 
 .task-status,
 .task-priority {
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .status-todo {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: #f3f4f6;
+  color: #374151;
 }
 
 .status-in_progress {
-  background: #fff3e0;
-  color: #f57c00;
+  background: #dbeafe;
+  color: #1e40af;
 }
 
 .status-completed {
-  background: #e8f5e8;
-  color: #2e7d32;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .priority-low {
-  background: #f3e5f5;
-  color: #7b1fa2;
+  background: #f0fdf4;
+  color: #166534;
 }
 
 .priority-medium {
-  background: #fff3e0;
-  color: #ef6c00;
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .priority-high {
-  background: #ffebee;
-  color: #c62828;
+  background: #fed7d7;
+  color: #991b1b;
 }
 
 .priority-urgent {
-  background: #fce4ec;
-  color: #ad1457;
+  background: #fecaca;
+  color: #7f1d1d;
 }
 
-.task-info {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  font-size: 0.9rem;
-  color: #666;
+.task-dates {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 14px;
 }
 
-.task-info strong {
-  color: #333;
+.task-project {
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
 }
 
-/* Responsive pour la sidebar */
+.project-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.project-info svg {
+  color: #94a3b8;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
+  .my-tasks-container {
+    flex-direction: column;
+  }
+  
   .sidebar {
     width: 100%;
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    height: auto;
   }
-
-  .sidebar.open {
-    transform: translateX(0);
-  }
-
+  
   .main-content {
-    margin-left: 0;
+    padding: 20px;
   }
-
-  /* Responsive pour les informations du compte */
-  .account-info {
-    gap: 0.5rem;
-    padding: 0.75rem;
-  }
-
-  .account-avatar-container {
-    justify-content: center;
-  }
-
-  .account-details {
-    align-items: center;
-    text-align: center;
-  }
-
-  .account-name {
-    font-size: 0.85rem;
-  }
-
-  .account-email {
-    font-size: 0.7rem;
-  }
-
-  .account-member-since {
-    font-size: 0.65rem;
-  }
-
-  .account-logout-btn {
-    width: calc(100% - 1rem);
-    margin: 0.5rem 0.5rem;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8rem;
-  }
-
-  .my-tasks-container {
-    padding: 1rem;
-  }
-
+  
   .filters-section {
     flex-direction: column;
-    align-items: stretch;
+    gap: 16px;
   }
-
+  
   .task-header {
     flex-direction: column;
-    gap: 1rem;
+    gap: 12px;
   }
-
+  
   .task-info {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 480px) {
-  .account-info {
-    margin-left: 0.5rem;
-    margin-right: 0.5rem;
-    padding: 0.5rem;
-  }
-
-  .account-name {
-    font-size: 0.8rem;
-  }
-
-  .account-email {
-    font-size: 0.65rem;
-  }
-
-  .account-member-since {
-    font-size: 0.6rem;
-  }
-
-  .account-logout-btn {
-    width: calc(100% - 1rem);
-    margin: 0.5rem 0.5rem;
-    padding: 0.5rem;
-    font-size: 0.75rem;
-  }
-}
-
-/* Styles pour la modal de suppression */
-.delete-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease;
-}
-
-.delete-modal {
-  background: white;
-  border-radius: 12px;
-  padding: 0;
-  max-width: 500px;
-  width: 90%;
-  max-height: 90vh;
-  overflow: hidden;
-  animation: slideIn 0.3s ease;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.delete-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid #e5e7eb;
-  background: #f9fafb;
-}
-
-.delete-modal-header h3 {
-  margin: 0;
-  color: #1f2937;
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #6b7280;
-  cursor: pointer;
-  padding: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-.close-btn:hover {
-  background: #e5e7eb;
-  color: #374151;
-}
-
-.delete-modal-content {
-  padding: 2rem;
-  text-align: center;
-}
-
-.warning-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-.delete-modal-content p {
-  margin: 0 0 1rem 0;
-  color: #374151;
-  line-height: 1.6;
-}
-
-.warning-text {
-  color: #dc2626 !important;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.delete-modal-actions {
-  display: flex;
-  gap: 1rem;
-  padding: 1.5rem 2rem;
-  border-top: 1px solid #e5e7eb;
-  background: #f9fafb;
-  justify-content: flex-end;
-}
-
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.btn-secondary {
-  background: #6b7280;
-  color: white;
-}
-
-.btn-secondary:hover {
-  background: #4b5563;
-}
-
-.btn-danger {
-  background: #dc2626;
-  color: white;
-}
-
-.btn-danger:hover:not(:disabled) {
-  background: #b91c1c;
-}
-
-.btn-danger:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-20px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-/* Responsive pour la modal */
-@media (max-width: 768px) {
-  .delete-modal {
-    width: 95%;
-    margin: 1rem;
-  }
-
-  .delete-modal-header,
-  .delete-modal-content,
-  .delete-modal-actions {
-    padding: 1rem 1.5rem;
-  }
-
-  .delete-modal-actions {
     flex-direction: column;
-  }
-
-  .btn {
-    width: 100%;
+    gap: 12px;
+    align-items: flex-start;
   }
 }
 </style>

@@ -14,7 +14,6 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/payment', name: 'payment_')]
-#[IsGranted('ROLE_USER')]
 class PaymentController extends AbstractController
 {
     private StripeService $stripeService;
@@ -29,6 +28,7 @@ class PaymentController extends AbstractController
     }
 
     #[Route('/config', name: 'config', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
     public function getConfig(): JsonResponse
     {
         /** @var User $user */
@@ -52,6 +52,7 @@ class PaymentController extends AbstractController
     }
 
     #[Route('/create-subscription', name: 'create_subscription', methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
     public function createSubscription(Request $request): JsonResponse
     {
         /** @var User $user */
@@ -92,6 +93,7 @@ class PaymentController extends AbstractController
     }
 
     #[Route('/subscription-status', name: 'subscription_status', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
     public function getSubscriptionStatus(): JsonResponse
     {
         /** @var User $user */
@@ -124,6 +126,7 @@ class PaymentController extends AbstractController
     }
 
     #[Route('/cancel-subscription', name: 'cancel_subscription', methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
     public function cancelSubscription(Request $request): JsonResponse
     {
         /** @var User $user */
@@ -160,20 +163,186 @@ class PaymentController extends AbstractController
         $signature = $request->headers->get('stripe-signature');
 
         if (!$signature) {
+            error_log('Stripe webhook: Signature manquante');
             return new JsonResponse(['error' => 'Signature manquante'], 400);
         }
 
-        $result = $this->stripeService->handleWebhook($payload, $signature);
+        try {
+            // Vérifier la signature Stripe
+            $webhookSecret = $_ENV['STRIPE_WEBHOOK_SECRET'] ?? '';
+            if (empty($webhookSecret)) {
+                error_log('Stripe webhook: STRIPE_WEBHOOK_SECRET non configuré');
+                return new JsonResponse(['error' => 'Configuration webhook manquante'], 500);
+            }
 
-        if ($result['success']) {
+            $event = \Stripe\Webhook::constructEvent($payload, $signature, $webhookSecret);
+            
+            // Traiter l'événement
+            switch ($event->type) {
+                case 'checkout.session.completed':
+                    $this->handleCheckoutSessionCompleted($event->data->object);
+                    break;
+                
+                case 'customer.subscription.created':
+                case 'customer.subscription.updated':
+                    $this->handleSubscriptionUpdated($event->data->object);
+                    break;
+                
+                case 'customer.subscription.deleted':
+                    $this->handleSubscriptionDeleted($event->data->object);
+                    break;
+                
+                case 'invoice.payment_succeeded':
+                    $this->handleInvoicePaymentSucceeded($event->data->object);
+                    break;
+                
+                case 'invoice.payment_failed':
+                    $this->handleInvoicePaymentFailed($event->data->object);
+                    break;
+                
+                default:
+                    error_log("Stripe webhook: Événement non géré: {$event->type}");
+            }
+
             return new JsonResponse(['status' => 'success']);
-        } else {
-            return new JsonResponse(['error' => $result['error']], 400);
+
+        } catch (\Stripe\Exception\SignatureVerificationException $e) {
+            error_log('Stripe webhook: Signature invalide - ' . $e->getMessage());
+            return new JsonResponse(['error' => 'Signature invalide'], 400);
+        } catch (\Exception $e) {
+            error_log('Stripe webhook: Erreur - ' . $e->getMessage());
+            return new JsonResponse(['error' => 'Erreur de traitement'], 500);
+        }
+    }
+
+    private function handleCheckoutSessionCompleted($session): void
+    {
+        $customerEmail = $session->customer_details->email ?? null;
+        $subscriptionId = $session->subscription ?? null;
+
+        if (!$customerEmail || !$subscriptionId) {
+            error_log('Stripe webhook: Données de session incomplètes');
+            return;
+        }
+
+        // Trouver l'utilisateur par email
+        $user = $this->entityManager->getRepository(\App\Entity\User::class)
+            ->findOneBy(['email' => $customerEmail]);
+
+        if (!$user) {
+            error_log("Stripe webhook: Utilisateur non trouvé pour l'email: {$customerEmail}");
+            return;
+        }
+
+        // Vérifier si l'abonnement existe déjà
+        $existingSubscription = $this->entityManager->getRepository(\App\Entity\Subscription::class)
+            ->findOneBy(['stripeSubscriptionId' => $subscriptionId]);
+
+        if ($existingSubscription) {
+            error_log("Stripe webhook: Abonnement déjà existant: {$subscriptionId}");
+            return;
+        }
+
+        // Créer un nouvel abonnement
+        $subscription = new \App\Entity\Subscription();
+        $subscription->setUser($user);
+        $subscription->setStripeSubscriptionId($subscriptionId);
+        $subscription->setStripeCustomerId($session->customer ?? null);
+        $subscription->setStatus('active');
+        $subscription->setPlan('premium');
+        $subscription->setAmount(2999); // €29.99 en centimes
+        $subscription->setCurrency('eur');
+        $subscription->setCurrentPeriodStart(new \DateTimeImmutable());
+        $subscription->setCurrentPeriodEnd(new \DateTimeImmutable('+1 month'));
+
+        $this->entityManager->persist($subscription);
+        $this->entityManager->flush();
+
+        error_log("Stripe webhook: Abonnement créé pour l'utilisateur: {$customerEmail}");
+    }
+
+    private function handleSubscriptionUpdated($subscription): void
+    {
+        $subscriptionId = $subscription->id ?? null;
+        if (!$subscriptionId) {
+            return;
+        }
+
+        $dbSubscription = $this->entityManager->getRepository(\App\Entity\Subscription::class)
+            ->findOneBy(['stripeSubscriptionId' => $subscriptionId]);
+
+        if (!$dbSubscription) {
+            return;
+        }
+
+        $dbSubscription->setStatus($subscription->status ?? 'incomplete');
+        
+        if (isset($subscription->current_period_start)) {
+            $dbSubscription->setCurrentPeriodStart(
+                new \DateTimeImmutable('@' . $subscription->current_period_start)
+            );
+        }
+        
+        if (isset($subscription->current_period_end)) {
+            $dbSubscription->setCurrentPeriodEnd(
+                new \DateTimeImmutable('@' . $subscription->current_period_end)
+            );
+        }
+
+        $this->entityManager->flush();
+    }
+
+    private function handleSubscriptionDeleted($subscription): void
+    {
+        $subscriptionId = $subscription->id ?? null;
+        if (!$subscriptionId) {
+            return;
+        }
+
+        $dbSubscription = $this->entityManager->getRepository(\App\Entity\Subscription::class)
+            ->findOneBy(['stripeSubscriptionId' => $subscriptionId]);
+
+        if ($dbSubscription) {
+            $dbSubscription->setStatus('canceled');
+            $this->entityManager->flush();
+        }
+    }
+
+    private function handleInvoicePaymentSucceeded($invoice): void
+    {
+        $subscriptionId = $invoice->subscription ?? null;
+        if (!$subscriptionId) {
+            return;
+        }
+
+        $subscription = $this->entityManager->getRepository(\App\Entity\Subscription::class)
+            ->findOneBy(['stripeSubscriptionId' => $subscriptionId]);
+
+        if ($subscription) {
+            $subscription->setStatus('active');
+            $this->entityManager->flush();
+        }
+    }
+
+    private function handleInvoicePaymentFailed($invoice): void
+    {
+        $subscriptionId = $invoice->subscription ?? null;
+        if (!$subscriptionId) {
+            return;
+        }
+
+        $subscription = $this->entityManager->getRepository(\App\Entity\Subscription::class)
+            ->findOneBy(['stripeSubscriptionId' => $subscriptionId]);
+
+        if ($subscription) {
+            $subscription->setStatus('past_due');
+            $this->entityManager->flush();
         }
     }
 
 
     #[Route('/premium-features', name: 'premium_features', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
     public function getPremiumFeatures(): JsonResponse
     {
         /** @var User $user */
@@ -232,5 +401,6 @@ class PaymentController extends AbstractController
             ],
         ]);
     }
+
 }
 

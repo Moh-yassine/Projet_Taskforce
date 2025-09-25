@@ -109,6 +109,14 @@ class TaskController extends AbstractController
                 }
             }
             
+            // Colonne
+            if (isset($taskData['columnId'])) {
+                $column = $this->em->getRepository(\App\Entity\Column::class)->find($taskData['columnId']);
+                if ($column) {
+                    $task->setColumn($column);
+                }
+            }
+            
             // Assignation
             if (isset($taskData['assigneeId']) && $taskData['assigneeId']) {
                 $assignee = $this->userRepository->find($taskData['assigneeId']);
@@ -196,10 +204,19 @@ class TaskController extends AbstractController
         try {
             $taskData = json_decode($request->getContent(), true);
             
-            $task->setTitle($taskData['title']);
-            $task->setDescription($taskData['description'] ?? '');
-            $task->setStatus($taskData['status'] ?? $task->getStatus());
-            $task->setPriority($taskData['priority']);
+            // Mettre à jour seulement les champs fournis
+            if (isset($taskData['title'])) {
+                $task->setTitle($taskData['title']);
+            }
+            if (isset($taskData['description'])) {
+                $task->setDescription($taskData['description']);
+            }
+            if (isset($taskData['status'])) {
+                $task->setStatus($taskData['status']);
+            }
+            if (isset($taskData['priority'])) {
+                $task->setPriority($taskData['priority']);
+            }
             $task->setUpdatedAt(new \DateTime());
             
             // Nouveaux champs
@@ -211,6 +228,19 @@ class TaskController extends AbstractController
             }
             if (isset($taskData['actualHours'])) {
                 $task->setActualHours($taskData['actualHours']);
+            }
+            
+            // Colonne
+            if (isset($taskData['columnId'])) {
+                $column = $this->em->getRepository(\App\Entity\Column::class)->find($taskData['columnId']);
+                if ($column) {
+                    $task->setColumn($column);
+                }
+            }
+            
+            // Position
+            if (isset($taskData['position'])) {
+                $task->setPosition($taskData['position']);
             }
             
             // Assignation simple (pour compatibilité)

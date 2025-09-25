@@ -41,12 +41,14 @@ export interface CreateTaskData {
   status?: 'todo' | 'in_progress' | 'completed'
   priority: 'low' | 'medium' | 'high' | 'urgent'
   projectId: number
+  columnId?: number
   assigneeId?: number
   skills?: string[]
   startDate?: string
   dueDate?: string
   estimatedHours?: number
   actualHours?: number
+  position?: number
 }
 
 export interface UpdateTaskData extends Partial<CreateTaskData> {

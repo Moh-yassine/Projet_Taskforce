@@ -149,9 +149,9 @@ const handlePayment = async () => {
     // Utiliser le vrai flux Stripe Checkout
     const result = await paymentService.createSubscription()
     
-    if (result.success && result.checkoutUrl) {
+    if (result.success && result.checkout_url) {
       // Rediriger vers Stripe Checkout pour le paiement
-      window.location.href = result.checkoutUrl
+      window.location.href = result.checkout_url
     } else {
       throw new Error(result.error || 'Erreur lors de la création de la session de paiement')
     }

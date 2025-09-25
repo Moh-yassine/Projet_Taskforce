@@ -138,7 +138,7 @@
                 <div class="quick-action-content">
                   <h4>Mes tâches</h4>
                   <p>Consultez et gérez vos tâches assignées</p>
-                  <button class="quick-action-btn">Voir mes tâches</button>
+                  <button class="quick-action-btn" @click="router.push('/my-tasks')">Voir mes tâches</button>
                 </div>
               </div>
             </div>
@@ -336,11 +336,9 @@ onMounted(async () => {
   const urlParams = new URLSearchParams(window.location.search)
   if (urlParams.get('premium') === 'success') {
     console.log('🎉 Retour après paiement réussi, vérification du statut premium...')
-    // Rafraîchir le statut d'abonnement
-    await checkSubscriptionStatus()
     
-    // Afficher un message de succès
-    console.log('🎉 Abonnement Premium activé avec succès !')
+    // Attendre que le webhook Stripe traite le paiement
+    await waitForPremiumActivation()
     
     // Nettoyer l'URL
     window.history.replaceState({}, document.title, window.location.pathname)
@@ -406,6 +404,122 @@ const checkSubscriptionStatus = async () => {
     
     hasActiveSubscription.value = false
   }
+}
+
+const waitForPremiumActivation = async () => {
+  console.log('⏳ Attente de l\'activation Premium via webhook Stripe...')
+  
+  // Polling pour vérifier le statut Premium
+  let attempts = 0
+  const maxAttempts = 30 // 30 tentatives = 30 secondes max
+  
+  while (attempts < maxAttempts) {
+    try {
+      await checkSubscriptionStatus()
+      
+      if (hasActiveSubscription.value) {
+        console.log('🎉 Abonnement Premium activé avec succès !')
+        // Afficher une notification de succès
+        showSuccessNotification('Abonnement Premium activé ! Vous avez maintenant accès au mode observateur.')
+        return
+      }
+      
+      // Attendre 1 seconde avant la prochaine vérification
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      attempts++
+      
+      if (attempts % 5 === 0) {
+        console.log(`⏳ Vérification du statut Premium... (${attempts}/${maxAttempts})`)
+      }
+    } catch (error) {
+      console.error('Erreur lors de la vérification du statut Premium:', error)
+      attempts++
+    }
+  }
+  
+  // Si on arrive ici, le Premium n'a pas été activé dans les temps
+  console.warn('⚠️ L\'activation Premium prend plus de temps que prévu. Le webhook Stripe peut prendre quelques minutes.')
+  showWarningNotification('L\'activation Premium prend plus de temps que prévu. Le webhook Stripe peut prendre quelques minutes. Veuillez rafraîchir la page si nécessaire.')
+}
+
+const showSuccessNotification = (message: string) => {
+  // Créer une notification de succès temporaire
+  const notification = document.createElement('div')
+  notification.className = 'premium-success-notification'
+  notification.innerHTML = `
+    <div class="notification-content">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="color: #10b981;">
+        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+      </svg>
+      <span>${message}</span>
+    </div>
+  `
+  
+  // Styles pour la notification
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #10b981;
+    color: white;
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    z-index: 10000;
+    animation: slideInRight 0.3s ease;
+  `
+  
+  document.body.appendChild(notification)
+  
+  // Supprimer la notification après 5 secondes
+  setTimeout(() => {
+    notification.style.animation = 'slideOutRight 0.3s ease'
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification)
+      }
+    }, 300)
+  }, 5000)
+}
+
+const showWarningNotification = (message: string) => {
+  // Créer une notification d'avertissement temporaire
+  const notification = document.createElement('div')
+  notification.className = 'premium-warning-notification'
+  notification.innerHTML = `
+    <div class="notification-content">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" style="color: #f59e0b;">
+        <path d="M12 2l9 20H3l9-20zm0 3.8L5.2 20h13.6L12 5.8zM11 16h2v2h-2v-2zm0-6h2v4h-2v-4z"/>
+      </svg>
+      <span>${message}</span>
+    </div>
+  `
+  
+  // Styles pour la notification
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #f59e0b;
+    color: white;
+    padding: 16px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    z-index: 10000;
+    animation: slideInRight 0.3s ease;
+  `
+  
+  document.body.appendChild(notification)
+  
+  // Supprimer la notification après 8 secondes
+  setTimeout(() => {
+    notification.style.animation = 'slideOutRight 0.3s ease'
+    setTimeout(() => {
+      if (notification.parentNode) {
+        notification.parentNode.removeChild(notification)
+      }
+    }, 300)
+  }, 8000)
 }
 
 const tryPremiumTaskforce = () => {
@@ -2141,5 +2255,35 @@ const updateUserAvatar = (avatarUrl: string) => {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+}
+
+/* Animations pour les notifications */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
 }
 </style>

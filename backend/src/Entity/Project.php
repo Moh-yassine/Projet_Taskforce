@@ -51,13 +51,14 @@ class Project
     #[ORM\OneToMany(mappedBy: 'project', targetEntity: Task::class, cascade: ['persist', 'remove'])]
     private Collection $tasks;
 
-
-
+    #[ORM\OneToMany(mappedBy: 'project', targetEntity: Column::class, cascade: ['persist', 'remove'])]
+    private Collection $columns;
 
     public function __construct()
     {
         $this->teamMembers = new ArrayCollection();
         $this->tasks = new ArrayCollection();
+        $this->columns = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -211,6 +212,33 @@ class Project
         if ($this->tasks->removeElement($task)) {
             if ($task->getProject() === $this) {
                 $task->setProject(null);
+            }
+        }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Column>
+     */
+    public function getColumns(): Collection
+    {
+        return $this->columns;
+    }
+
+    public function addColumn(Column $column): static
+    {
+        if (!$this->columns->contains($column)) {
+            $this->columns->add($column);
+            $column->setProject($this);
+        }
+        return $this;
+    }
+
+    public function removeColumn(Column $column): static
+    {
+        if ($this->columns->removeElement($column)) {
+            if ($column->getProject() === $this) {
+                $column->setProject(null);
             }
         }
         return $this;

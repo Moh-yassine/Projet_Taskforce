@@ -31,9 +31,9 @@ class StripeService
         $this->entityManager = $entityManager;
         $this->subscriptionRepository = $subscriptionRepository;
         
-        // Utiliser vos clés Stripe directement pour le test
-        $this->stripeSecretKey = $stripeSecretKey ?: 'sk_test_51S5oNDRyNP7K69mNIagsNjPlXg9Ndd1101C7pRjH3mIjQIfa2UnswStmLaBlRZhzlBOJEydjQcWym6p8aVpH4kxf00mcwmHhCC';
-        $this->stripePublicKey = $stripePublicKey ?: 'pk_test_51S5oNDRyNP7K69mNAktlFsF76GumOdNPlggTFso5XPKeLbRB842U6wysSFXJlSLPnQJCW65RpOv5wc3jl8ULElT000mLHgVg1T';
+        // Utiliser les variables d'environnement ou les clés par défaut pour le test
+        $this->stripeSecretKey = $stripeSecretKey ?: ($_ENV['STRIPE_SECRET_KEY'] ?? 'sk_test_51S5oNDRyNP7K69mNIagsNjPlXg9Ndd1101C7pRjH3mIjQIfa2UnswStmLaBlRZhzlBOJEydjQcWym6p8aVpH4kxf00mcwmHhCC');
+        $this->stripePublicKey = $stripePublicKey ?: ($_ENV['STRIPE_PUBLIC_KEY'] ?? 'pk_test_51S5oNDRyNP7K69mNAktlFsF76GumOdNPlggTFso5XPKeLbRB842U6wysSFXJlSLPnQJCW65RpOv5wc3jl8ULElT000mLHgVg1T');
         
         Stripe::setApiKey($this->stripeSecretKey);
     }
@@ -314,7 +314,7 @@ class StripeService
                 ]],
                 'mode' => 'subscription',
                 'success_url' => 'http://localhost:5173/dashboard?premium=success',
-                'cancel_url' => 'http://localhost:5173/payment?cancelled=true',
+                'cancel_url' => 'http://localhost:5173/dashboard?premium=cancelled',
                 'metadata' => [
                     'user_id' => $user->getId(),
                 ],
