@@ -140,7 +140,7 @@ const handlePayment = async () => {
     const response = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer sk_test_51S5oNDRyNP7K69mNIagsNjPlXg9Ndd1101C7pRjH3mIjQIfa2UnswStmLaBlRZhzlBOJEydjQcWym6p8aVpH4kxf00mcwmHhCC',
+        'Authorization': `Bearer ${import.meta.env.VITE_STRIPE_SECRET_KEY}`,
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({

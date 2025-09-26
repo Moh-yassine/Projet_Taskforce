@@ -2,8 +2,16 @@
 
 require_once 'vendor/autoload.php';
 
-// Configuration Stripe
-\Stripe\Stripe::setApiKey('sk_test_51550NDRyNP7K69mNIagsNjPlXg9Ndd1101C7pRjH3mIjQIfa2UnswStmLaBlRZhzlBOJEydjQcWym6p8aVpH4kxf00mcwmHhCC');
+// Configuration Stripe - utiliser les variables d'environnement
+$stripeSecretKey = $_ENV['STRIPE_SECRET_KEY'] ?? getenv('STRIPE_SECRET_KEY');
+
+if (!$stripeSecretKey) {
+    echo "❌ Erreur: La variable d'environnement STRIPE_SECRET_KEY n'est pas définie.\n";
+    echo "Veuillez définir cette variable avec votre clé secrète Stripe.\n";
+    exit(1);
+}
+
+\Stripe\Stripe::setApiKey($stripeSecretKey);
 
 try {
     echo "Création du produit TaskForce Premium...\n";

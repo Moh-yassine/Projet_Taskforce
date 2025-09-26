@@ -31,9 +31,13 @@ class StripeService
         $this->entityManager = $entityManager;
         $this->subscriptionRepository = $subscriptionRepository;
         
-        // Utiliser les variables d'environnement ou les clés par défaut pour le test
-        $this->stripeSecretKey = $stripeSecretKey ?: ($_ENV['STRIPE_SECRET_KEY'] ?? 'sk_test_51S5oNDRyNP7K69mNIagsNjPlXg9Ndd1101C7pRjH3mIjQIfa2UnswStmLaBlRZhzlBOJEydjQcWym6p8aVpH4kxf00mcwmHhCC');
-        $this->stripePublicKey = $stripePublicKey ?: ($_ENV['STRIPE_PUBLIC_KEY'] ?? 'pk_test_51S5oNDRyNP7K69mNAktlFsF76GumOdNPlggTFso5XPKeLbRB842U6wysSFXJlSLPnQJCW65RpOv5wc3jl8ULElT000mLHgVg1T');
+        // Utiliser uniquement les variables d'environnement
+        $this->stripeSecretKey = $stripeSecretKey ?: $_ENV['STRIPE_SECRET_KEY'];
+        $this->stripePublicKey = $stripePublicKey ?: $_ENV['STRIPE_PUBLIC_KEY'];
+        
+        if (!$this->stripeSecretKey) {
+            throw new \Exception('STRIPE_SECRET_KEY environment variable is required');
+        }
         
         Stripe::setApiKey($this->stripeSecretKey);
     }
