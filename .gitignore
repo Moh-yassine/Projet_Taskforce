@@ -114,3 +114,14 @@ coverage/
 
 # Local development
 *.local
+
+# Docker files
+docker.env
+docker-compose.override.yml
+
+# Database files
+database/
+database_export/
+
+# Scripts
+start.sh

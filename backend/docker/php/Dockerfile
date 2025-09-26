@@ -1,4 +1,4 @@
-FROM php:8.2-fpm
+FROM php:8.2-cli
 
 # Installation des extensions PHP nécessaires
 RUN apt-get update && apt-get install -y \
@@ -7,11 +7,11 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
     libxml2-dev \
-    libpq-dev \
+    default-mysql-client \
     zip \
     unzip \
     openssl \
-    && docker-php-ext-install pdo pdo_pgsql mbstring exif pcntl bcmath gd \
+    && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -39,9 +39,14 @@ RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interactio
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html
 
-# Exposer le port 9000
-EXPOSE 9000
+# Exposer le port 8000
+EXPOSE 8000
 
-CMD ["php-fpm"]
+# Script de démarrage qui exécute les migrations puis démarre le serveur
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["php", "-S", "0.0.0.0:8000", "-t", "public"]
 
 

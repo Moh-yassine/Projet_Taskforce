@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # Base de données MySQL
+  database:
+    image: mysql:8.0
+    container_name: taskforce_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: taskforce_db
+      MYSQL_USER: taskforce
+      MYSQL_PASSWORD: taskforce
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - taskforce_network
+
+  # Backend Symfony
+  backend:
+    build:
+      context: ./backend
+      dockerfile: docker/php/Dockerfile
+    container_name: taskforce_backend
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      database:
+        condition: service_healthy
+    env_file:
+      - docker.env
+    environment:
+      - APP_ENV=${APP_ENV}
+      - DATABASE_URL=mysql://taskforce:taskforce@172.21.0.2:3306/taskforce_db
+    ports:
+      - "8000:8000"
+    networks:
+      - taskforce_network
+
+  # phpMyAdmin pour gérer la base de données
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: taskforce_phpmyadmin
+    environment:
+      PMA_HOST: database
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "8080:80"
+    depends_on:
+      - database
+    networks:
+      - taskforce_network
+
+  # Frontend Vue.js
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: taskforce_frontend
+    ports:
+      - "5173:5173"
+    env_file:
+      - docker.env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+    networks:
+      - taskforce_network
+
+volumes:
+  mysql_data:
+
+networks:
+  taskforce_network:
+    driver: bridge
