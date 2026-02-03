@@ -1,0 +1,40 @@
+name: CI Development - Build Check 🚀
+
+on:
+  push:
+    branches: [main, 'feat/*']
+  pull_request:
+    branches: [main, 'feat/*', 'fix/*', 'hotfix/*']
+  workflow_dispatch:
+
+jobs:
+  build-check:
+    runs-on: ubuntu-latest
+   
+    steps:
+      - name: Checkout code 📦
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run type-check:simple
+
+      - name: Lint
+        run: npm run lint:check
+
+      - name: Run tests
+        run: npx vitest run --reporter=default
+
+      - name: Build
+        run: npm run build-only
+        env:
+          NODE_ENV: production
